@@ -153,25 +153,38 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-
-    function saveData() {
-        if (signaturePad.isEmpty()) {
-            alert("Por favor, firme el documento antes de enviar.");
-            return;
-        }
-
-        const data = {
-            nombre: document.getElementById('nombre').value,
-            dni: document.getElementById('dni').value,
-            firma: signaturePad.toDataURL(), // Esto es la imagen en base64
-            fecha: new Date().toISOString()
-        };
-
-        console.log("Datos listos para enviar a Firebase:", data);
-        alert("¡Registro exitoso! (Mira la consola para ver los datos)");
-        
-        // Aquí conectaremos con Firebase en el siguiente paso
+async function saveData() {
+    if (signaturePad.isEmpty()) {
+        alert("Por favor, firme antes de enviar.");
+        return;
     }
+
+    const dni = document.getElementById('dni').value;
+    const nombre = document.getElementById('nombre').value;
+    const firmaBase64 = signaturePad.toDataURL(); // Imagen
+
+    try {
+        // 1. Subir imagen al Storage
+        const storageRef = ref(storage, `firmas/${dni}_${Date.now()}.png`);
+        await uploadString(storageRef, firmaBase64, 'data_url');
+
+        // 2. Guardar datos en Firestore
+        await addDoc(collection(db, "deslindes"), {
+            nombre: nombre,
+            dni: dni,
+            fecha: new Date().toISOString(),
+            firmado: true
+        });
+
+        alert("✅ Firma guardada con éxito. ¡Ya puedes entrar a la cancha!");
+        location.reload(); // Limpiar formulario
+
+    } catch (e) {
+        console.error("Error al guardar: ", e);
+        alert("Hubo un error. Intenta de nuevo.");
+    }
+}
+    
 </script>
 
 </body>
