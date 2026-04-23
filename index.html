@@ -313,13 +313,14 @@
             }
         }
 
+        // 1. ELIMINAMOS RESTRICCIONES Y CAPTURAMOS BIEN EL CONTENEDOR
         async function validarYGuardarCloud() {
             const refEca = document.getElementById('refEca').value.trim();
             if(!refEca) { 
                 alert("Ingrese Ref ECA"); 
                 return; 
             }
-            // Eliminamos la validación de existencia para permitir duplicados por contenedor
+            // Eliminamos la validación de duplicados para permitir misma Ref con distinto Contenedor
             ejecutarGuardado();
         }
 
@@ -328,19 +329,47 @@
             document.querySelectorAll("#bodyLotes .item-row").forEach(f => {
                 const prod = f.querySelector("select").value;
                 const inps = f.querySelectorAll("input");
-                if(prod) items.push({ prod, lote: inps[0].value, tamb: inps[1].value, cant: Number(inps[2].value)||0, netoU: Number(inps[3].value)||0, brutoU: Number(inps[4].value)||0 });
+                if(prod) items.push({ 
+                    prod, 
+                    lote: inps[0].value, 
+                    tamb: inps[1].value, 
+                    cant: Number(inps[2].value)||0, 
+                    netoU: Number(inps[3].value)||0, 
+                    brutoU: Number(inps[4].value)||0 
+                });
             });
-            const muestras = [];
-            document.querySelectorAll("#bodyMuestras .muestra-row").forEach(f => {
-                const i = f.querySelectorAll("input");
-                if(i[0].value) muestras.push({ lote: i[0].value, cant: Number(i[1].value)||0, netoU: Number(i[2].value)||0, brutoU: Number(i[3].value)||0 });
-            });
+
+            // Capturamos el valor exacto del input de contenedor
+            const valorContenedor = document.getElementById('contenedor').value.trim();
+
             const data = {
-                createdAt: new Date(), fecha: new Date().toLocaleString(), ref: document.getElementById('refEca').value, cliente: document.getElementById('cliente').value, pais: document.getElementById('paisDestino').value, via: document.getElementById('via').value, pol: document.getElementById('pol').value, pod: document.getElementById('pod').value, etd: document.getElementById('etd').value, eta: document.getElementById('eta').value, contenedor: document.getElementById('contenedor').value, buque: document.getElementById('buque').value, booking: document.getElementById('booking').value, aerolinea: document.getElementById('aerolinea').value, vuelo: document.getElementById('vuelo').value, awb: document.getElementById('awb').value, chofer: document.getElementById('chofer').value, pCamion: document.getElementById('patenteCamion').value, pSemi: document.getElementById('patenteSemi').value, empresa: document.getElementById('empresa').value, items, muestras, inclTambores: document.getElementById('mostrarTambores').checked, pCant: Number(document.getElementById('cantPallets').value) || 0, pPesoU: Number(document.getElementById('pesoPallet').value) || 0, conTermo: document.getElementById('conTermo').value, termo1: document.getElementById('termo1').value, termo2: document.getElementById('termo2').value
+                createdAt: new Date(), 
+                fecha: new Date().toLocaleString(), 
+                ref: document.getElementById('refEca').value, 
+                cliente: document.getElementById('cliente').value, 
+                pais: document.getElementById('paisDestino').value, 
+                via: document.getElementById('via').value, 
+                pol: document.getElementById('pol').value, 
+                pod: document.getElementById('pod').value, 
+                etd: document.getElementById('etd').value, 
+                eta: document.getElementById('eta').value, 
+                contenedor: valorContenedor, // Aseguramos que se guarde
+                buque: document.getElementById('buque').value, 
+                booking: document.getElementById('booking').value, 
+                items, 
+                inclTambores: document.getElementById('mostrarTambores').checked, 
+                pCant: Number(document.getElementById('cantPallets').value) || 0, 
+                pPesoU: Number(document.getElementById('pesoPallet').value) || 0
             };
+
+            // Usamos addDoc para permitir múltiples registros con la misma referencia
             await window.fb.add(window.fb.col(window.fb.db, "packinglists"), data);
+            
+            // Pasamos 'data' a la función del PDF
             generarPDFCore(data, document.getElementById('idiomaDoc').value);
-            alert("Guardado");
+            
+            alert("Guardado con éxito");
+            renderizarHistorial(); 
         }
 
         async function renderizarHistorial() {
