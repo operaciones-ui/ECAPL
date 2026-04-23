@@ -315,13 +315,12 @@
 
         async function validarYGuardarCloud() {
             const refEca = document.getElementById('refEca').value.trim();
-            if(!refEca) { alert("Ingrese Ref ECA"); return; }
-            const q = window.fb.qry(window.fb.col(window.fb.db, "packinglists"), window.fb.wh("ref", "==", refEca));
-            const snap = await window.fb.get(q);
-            if(!snap.empty && confirm(`Ref ${refEca} existe. ¿Sobreescribir?`)) {
-                snap.forEach(async (d) => await window.fb.del(window.fb.docRef(window.fb.db, "packinglists", d.id)));
-                ejecutarGuardado();
-            } else if(snap.empty) { ejecutarGuardado(); }
+            if(!refEca) { 
+                alert("Ingrese Ref ECA"); 
+                return; 
+            }
+            // Eliminamos la validación de existencia para permitir duplicados por contenedor
+            ejecutarGuardado();
         }
 
         async function ejecutarGuardado() {
@@ -410,7 +409,7 @@
             const doc = new jsPDF();
             const T = i18n[lang];
 
-            // 1. CARGA DE IMÁGENES (Color y B&N)
+            // 1. CARGA DE IMÁGENES (Color para cabecera, B&N para marca de agua)
             const cargarImagenBN = (url) => {
                 return new Promise((resolve) => {
                     const img = new Image();
@@ -421,8 +420,11 @@
                         const ctx = canvas.getContext('2d');
                         canvas.width = img.width;
                         canvas.height = img.height;
+                        
+                        // Versión B&N para la marca de agua
                         ctx.filter = 'grayscale(100%)';
                         ctx.drawImage(img, 0, 0);
+                        
                         resolve({
                             original: img,
                             bn: canvas.toDataURL('image/png')
@@ -434,7 +436,7 @@
 
             const imagenes = await cargarImagenBN(LOGO_URL);
 
-            // 2. ENCABEZADO: Texto Azul y Logo COLOR
+            // 2. ENCABEZADO
             doc.setTextColor(0, 51, 102); 
             doc.setFontSize(22);
             doc.setFont("helvetica", 'bold'); 
@@ -445,16 +447,16 @@
             doc.text(T.titulo, 14, 30);
 
             if (imagenes && imagenes.original) {
-                // Logo en COLOR para el encabezado
+                // Logo a COLOR en el encabezado
                 doc.addImage(imagenes.original, 'PNG', 150, 8, 45, 24); 
             }
 
-            // 3. FRANJA DIVISORIA AZUL MARINO
+            // 3. FRANJA DIVISORIA
             doc.setDrawColor(0, 51, 102);
             doc.setLineWidth(1.2);
             doc.line(14, 38, 196, 38);
 
-            // 4. INFORMACIÓN DEL EMBARQUE
+            // 4. DATOS DEL EMBARQUE
             doc.setTextColor(0, 0, 0);
             const imprimirDato = (etiqueta, valor, x, y) => {
                 doc.setFontSize(7);
@@ -496,7 +498,7 @@
                 imprimirDato(T.empresa, data.empresa, 110, 66);
             }
 
-            // 5. TABLA DE CONTENIDOS
+            // 5. TABLA DE PRODUCTOS
             const traduccionProductos = {
                 "ACEITE ESCENCIAL DE LIMON": "LEMON ESSENTIAL OIL", 
                 "ACEITE ESCENCIAL DE MANDARINA": "MANDARIN ESSENTIAL OIL", 
@@ -581,7 +583,7 @@
                 columnStyles: estilosColumnas 
             });
 
-            // --- MARCA DE AGUA: Logo en BLANCO Y NEGRO ---
+            // --- MARCA DE AGUA DINÁMICA (B&N) ---
             const postTableY = doc.lastAutoTable.finalY;
             if (imagenes && imagenes.bn) {
                 doc.saveGraphicsState();
@@ -590,7 +592,7 @@
                 doc.restoreGraphicsState();
             }
 
-            // 6. FIRMA DIGITAL
+            // 6. FIRMA
             const finalY = postTableY + 25; 
             const cargarFirmaImg = (url) => {
                 return new Promise((resolve) => {
@@ -639,8 +641,9 @@
                 doc.text(pieDerecha, 196, 288, { align: 'right' });
             }
 
-            // 8. GUARDAR
-            doc.save(`PL_${data.ref}_${lang}.pdf`);
+            // 8. GUARDAR CON NOMBRE DINÁMICO (REF + CONTENEDOR)
+            const nombreArchivo = `PL_${data.ref}_${data.contenedor || 'SIN_CONT'}_${lang}.pdf`;
+            doc.save(nombreArchivo);
         }
     </script>
 </body>
