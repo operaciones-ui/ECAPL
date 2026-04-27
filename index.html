@@ -710,26 +710,35 @@
         currentY += (obsTexto.length * 4) + 10;
     }
 
-    // 3. FIRMA (REPARADA)
-    // Si después de observaciones no queda espacio para la firma, saltar página
-    if (currentY > 230) { 
-        doc.addPage(); 
-        currentY = 20; 
-    }
+    // 6. FIRMA
+            const finalY = postTableY + 25; 
+            const cargarFirmaImg = (url) => {
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    img.crossOrigin = "Anonymous";
+                    img.src = url;
+                    img.onload = () => resolve(img);
+                    img.onerror = () => resolve(null);
+                });
+            };
 
-    const finalY = currentY + 20;
-    doc.setDrawColor(0, 0, 0);
-    doc.setLineWidth(0.5);
-    doc.line(135, finalY + 15, 185, finalY + 15); // Línea
-    
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
-    doc.setTextColor(0, 0, 0);
-    doc.text("ECA AGROINDUSTRIA", 142, finalY + 20); 
-    
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    doc.text(lang === 'EN' ? "Authorized Signature" : "Firma Autorizada", 146, finalY + 24);
+            const firmaURL = "https://lh3.googleusercontent.com/d/1m-O260uMHL7YN1A-sqB1ooiztmaU6Gb4";
+            const imgFirma = await cargarFirmaImg(firmaURL);
+            
+            if (imgFirma) {
+                doc.addImage(imgFirma, 'PNG', 150, finalY + 5, 18, 28); 
+            }
+
+            doc.setDrawColor(0, 0, 0);
+            doc.setLineWidth(0.5);
+            doc.line(135, finalY + 35, 185, finalY + 35); 
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(9);
+            doc.text("ECA AGROINDUSTRIA", 142, finalY + 40); 
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(8);
+            const textoFirma = lang === 'EN' ? "Authorized Signature" : "Firma Autorizada";
+            doc.text(textoFirma, 146, finalY + 44);
 
     // 4. PIE DE PÁGINA (Para todas las hojas)
     const totalPaginas = doc.internal.getNumberOfPages();
