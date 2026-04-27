@@ -357,6 +357,19 @@
                 });
             });
 
+            // --- BLOQUE AÑADIDO: CAPTURA DE MUESTRAS ---
+            const muestras = [];
+            document.querySelectorAll("#bodyMuestras .muestra-row").forEach(f => {
+                const inps = f.querySelectorAll("input");
+                const loteMuestra = inps[0].value;
+                if(loteMuestra) muestras.push({ 
+                    lote: loteMuestra, 
+                    cant: Number(inps[1].value)||0, 
+                    netoU: Number(inps[2].value)||0, 
+                    brutoU: Number(inps[3].value)||0 
+                });
+            });
+
             // Capturamos el valor exacto del input de contenedor
             const valorContenedor = document.getElementById('contenedor').value.trim();
 
@@ -371,11 +384,24 @@
                 pod: document.getElementById('pod').value, 
                 etd: document.getElementById('etd').value, 
                 eta: document.getElementById('eta').value, 
-                contenedor: valorContenedor, // Aseguramos que se guarde
+                contenedor: valorContenedor, 
                 buque: document.getElementById('buque').value, 
                 booking: document.getElementById('booking').value, 
-		observaciones: document.getElementById('observaciones').value,
+                
+                // --- CORRECCIÓN: IDS DE TRANSPORTE TERRESTRE ---
+                chofer: document.getElementById('chofer').value,
+                pCamion: document.getElementById('patenteCamion').value,
+                pSemi: document.getElementById('patenteSemi').value,
+                empresa: document.getElementById('empresa').value,
+                
+                // --- CORRECCIÓN: IDS DE TRANSPORTE AÉREO ---
+                aerolinea: document.getElementById('aerolinea').value,
+                vuelo: document.getElementById('vuelo').value,
+                awb: document.getElementById('awb').value,
+
+                observaciones: document.getElementById('observaciones').value,
                 items, 
+                muestras, // <--- AHORA SE INCLUYEN EN EL OBJETO DATA
                 inclTambores: document.getElementById('mostrarTambores').checked, 
                 pCant: Number(document.getElementById('cantPallets').value) || 0, 
                 pPesoU: Number(document.getElementById('pesoPallet').value) || 0
