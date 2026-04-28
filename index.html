@@ -271,9 +271,75 @@
         }
 
         const i18n = {
-            ES: { titulo: "PACKING LIST / DETALLE DE CARGA", ref: "Referencia", cliente: "Cliente", destino: "Destino", carga: "Puerto de carga", descarga: "Puerto de descarga", origen: "Aeropuerto de origen", destAereo: "Aeropuerto de destino", etd: "ETD (Salida)", eta: "ETA (Llegada)", cont: "Contenedor", buque: "Buque / Viaje", booking: "N° Booking", aero: "Aerolinea", vuelo: "Nro.Vuelo", awb: "Numero guia", chofer: "Chofer", patenteC: "Patente camion", patenteS: "Patente semi", empresa: "Transporte", hProd: "PRODUCTO", hLote: "LOTE", hTamb: "TAMBORES", hCant: "CANT", hNeto: "NETO (KG)", hBruto: "BRUTO (KG)", subtotal: "SUBTOTAL CARGA COMERCIAL", muestra: "MUESTRA", totalFinal: "PESO TOTAL FINAL", pallets: "PALLETS" },
-            EN: { titulo: "PACKING LIST / CARGO DETAILS", ref: "Reference", cliente: "Customer", destino: "Destination", carga: "Port of loading", descarga: "Port of discharge", origen: "Airport of departure", destAereo: "Airport of destination", etd: "ETD (departure)", eta: "ETA (arrival)", cont: "Container", buque: "Vessel / Voyage", booking: "Booking NO.", aero: "Airline", vuelo: "Flight NO.", awb: "AWB NO.", chofer: "Driver", patenteC: "Truck plate", patenteS: "Trailer plate", empresa: "Transport CO.", hProd: "PRODUCT", hLote: "BATCH/LOT", hTamb: "DRUMS", hCant: "QTY", hNeto: "NET (KG)", hBruto: "GROSS (KG)", subtotal: "COMMERCIAL CARGO SUBTOTAL", muestra: "SAMPLE", totalFinal: "FINAL TOTAL WEIGHT", pallets: "PALLETS" }
-        };
+    ES: {
+        titulo: "LISTA DE EMPAQUE",
+        ref: "REFERENCIA ECA",
+        fecha: "FECHA",
+        cliente: "CLIENTE",
+        destino: "PAÍS DESTINO",
+        via: "VÍA",
+        pol: "PUERTO CARGA",
+        pod: "PUERTO DESCARGA",
+        etd: "ETD",
+        eta: "ETA",
+        cont: "CONTENEDOR",
+        buque: "BUQUE",
+        booking: "BOOKING",
+        aero: "AEROLÍNEA",
+        vuelo: "VUELO",
+        awb: "GUÍA AÉREA / AWB",
+        chofer: "CHOFER",
+        patenteC: "PATENTE CAMIÓN",
+        patenteS: "PATENTE SEMI",
+        empresa: "EMPRESA TR.",
+        hTermo: "TERMÓGRAFOS", // <--- Faltaba esta
+        hMuestra: "MUESTRAS SIN VALOR COMERCIAL", // <--- Faltaba esta
+        hProd: "PRODUCTO", 
+	hLote: "LOTE", 
+	hTamb: "TAMB", 
+	hCant: "CANT", 
+        hNetoU: "PESO NETO", 
+	hNetoT: "NETO TOT", 
+	hBrutoU: "PESO BRUTO", 
+	hBrutoT: "BRUTO TOT",
+        totalFinal: "PESO TOTAL FINAL",
+        pallets: "PALLETS"
+    },
+    EN: {
+        titulo: "PACKING LIST",
+        ref: "ECA REFERENCE",
+        fecha: "DATE",
+        cliente: "CUSTOMER",
+        destino: "DESTINATION",
+        via: "VIA",
+        pol: "PORT OF LOADING",
+        pod: "PORT OF DISCHARGE",
+        etd: "ETD",
+        eta: "ETA",
+        cont: "CONTAINER",
+        buque: "VESSEL",
+        booking: "BOOKING",
+        aero: "AIRLINE",
+        vuelo: "FLIGHT",
+        awb: "AIR WAYBILL",
+        chofer: "DRIVER",
+        patenteC: "TRUCK PLATE",
+        patenteS: "SEMI PLATE",
+        empresa: "TR. COMPANY",
+        hTermo: "THERMOGRAPHS",
+        hMuestra: "SAMPLES WITH NO COMMERCIAL VALUE",
+        hProd: "PRODUCT", 
+	hLote: "BATCH", 
+	hTamb: "DRUM", 
+	hCant: "QTY", 
+        hNetoU: "NET W.", 
+	hNetoT: "TOT NET", 
+	hBrutoU: "GROSS W.", 
+	hBrutoT: "TOT GROSS",
+        totalFinal: "FINAL TOTAL WEIGHT",
+        pallets: "PALLETS"
+    }
+};
 
         function verPestana(id) {
             document.getElementById('pestana-generador').classList.toggle('hidden', id !== 'generador');
@@ -342,8 +408,10 @@
             ejecutarGuardado();
         }
 
+// EJECUTAR GUARDADO
         async function ejecutarGuardado() {
-            const items = [];
+        try {    
+	const items = [];
             document.querySelectorAll("#bodyLotes .item-row").forEach(f => {
                 const prod = f.querySelector("select").value;
                 const inps = f.querySelectorAll("input");
@@ -357,20 +425,21 @@
                 });
             });
 
-            // Captura de Muestras
-            const muestras = [];
-            document.querySelectorAll("#bodyMuestras .muestra-row").forEach(f => {
-                const inps = f.querySelectorAll("input");
-                const loteMuestra = inps[0].value;
-                if(loteMuestra) muestras.push({ 
-                    lote: loteMuestra, 
-                    cant: Number(inps[1].value)||0, 
-                    netoU: Number(inps[2].value)||0, 
-                    brutoU: Number(inps[3].value)||0 
+	const muestras = [];
+        document.querySelectorAll("#bodyMuestras .muestra-row").forEach(f => {
+            const inps = f.querySelectorAll("input");
+            const lote = inps[0].value.trim();
+            if(lote) {
+                muestras.push({
+                    lote: lote,
+                    cant: Number(inps[1].value)||0,
+                    netoU: Number(inps[2].value)||0,
+                    brutoU: Number(inps[3].value)||0
                 });
-            });
+            }
+        });
 
-            // Capturamos el valor exacto del input de contenedor
+
             const valorContenedor = document.getElementById('contenedor').value.trim();
 
             const data = {
@@ -384,29 +453,26 @@
                 pod: document.getElementById('pod').value, 
                 etd: document.getElementById('etd').value, 
                 eta: document.getElementById('eta').value, 
-                contenedor: valorContenedor, 
+                contenedor: valorContenedor, // Aseguramos que se guarde
                 buque: document.getElementById('buque').value, 
                 booking: document.getElementById('booking').value, 
-                
-                // IDs de transporte terrestre corregidos
-                chofer: document.getElementById('chofer').value,
-                pCamion: document.getElementById('patenteCamion').value,
-                pSemi: document.getElementById('patenteSemi').value,
-                empresa: document.getElementById('empresa').value,
-                
-                // IDs de transporte aéreo
-                aerolinea: document.getElementById('aerolinea').value,
-                vuelo: document.getElementById('vuelo').value,
-                awb: document.getElementById('awb').value,
-
-                // --- BLOQUE AÑADIDO: TERMÓGRAFOS ---
-                conTermo: document.getElementById('conTermo').value,
-                termo1: document.getElementById('termo1').value,
-                termo2: document.getElementById('termo2').value,
-
-                observaciones: document.getElementById('observaciones').value,
+		// --- NUEVOS CAMPOS DE TERMÓGRAFOS ---
+    		conTermo: document.getElementById('conTermo').value,
+    		termo1: document.getElementById('termo1').value,
+    		termo2: document.getElementById('termo2').value,
+    		// ------------------------------------
+		// --- AÑADE O CORRIGE ESTAS LÍNEAS PARA TERRESTRE ---
+    		chofer: document.getElementById('chofer').value,
+    		pCamion: document.getElementById('patenteCamion').value, // Guardamos como pCamion
+    		pSemi: document.getElementById('patenteSemi').value,     // Guardamos como pSemi
+    		empresa: document.getElementById('empresa').value,
+    		aerolinea: document.getElementById('aerolinea').value,
+    		vuelo: document.getElementById('vuelo').value,
+    		awb: document.getElementById('awb').value,
+    		// ---------------------------------------------------
+		observaciones: document.getElementById('observaciones').value,
                 items, 
-                muestras,
+		muestras,
                 inclTambores: document.getElementById('mostrarTambores').checked, 
                 pCant: Number(document.getElementById('cantPallets').value) || 0, 
                 pPesoU: Number(document.getElementById('pesoPallet').value) || 0
@@ -420,8 +486,11 @@
             
             alert("Guardado con éxito");
             renderizarHistorial(); 
-        }
-
+        } catch (error) {
+        console.error("Error al guardar:", error);
+        alert("Hubo un error: " + error.message);
+    	}
+}
         async function renderizarHistorial() {
             if(!window.fb) return;
             const tbody = document.getElementById('tablaHistorial');
@@ -456,11 +525,23 @@
             document.getElementById('paisDestino').value = d.pais;
             document.getElementById('via').value = d.via;
             toggleTransporte();
-            document.getElementById('pol').value = d.pol; document.getElementById('pod').value = d.pod;
-            document.getElementById('etd').value = d.etd; document.getElementById('eta').value = d.eta;
-            document.getElementById('contenedor').value = d.contenedor; document.getElementById('buque').value = d.buque; document.getElementById('booking').value = d.booking;
-            document.getElementById('aerolinea').value = d.aerolinea; document.getElementById('vuelo').value = d.vuelo; document.getElementById('awb').value = d.awb;
-            document.getElementById('chofer').value = d.chofer; document.getElementById('patenteCamion').value = d.pCamion; document.getElementById('patenteSemi').value = d.pSemi; document.getElementById('empresa').value = d.empresa;
+            document.getElementById('pol').value = d.pol; 
+	    document.getElementById('pod').value = d.pod;
+            document.getElementById('etd').value = d.etd; 
+	    document.getElementById('eta').value = d.eta;
+            document.getElementById('contenedor').value = d.contenedor; 
+	    document.getElementById('buque').value = d.buque; 			    
+	    document.getElementById('booking').value = d.booking;
+            document.getElementById('aerolinea').value = d.aerolinea; 
+	    document.getElementById('vuelo').value = d.vuelo; 	   		    
+	    document.getElementById('awb').value = d.awb;
+            document.getElementById('chofer').value = d.chofer; 
+	    document.getElementById('patenteCamion').value = d.pCamion; 	 	 	    	  	          			    			 		 	    document.getElementById('patenteSemi').value = d.pSemi; 
+	    document.getElementById('empresa').value = d.empresa;
+	    document.getElementById('conTermo').value = d.conTermo || 'NO';
+	    document.getElementById('termo1').value = d.termo1 || '';
+	    document.getElementById('termo2').value = d.termo2 || '';
+	    toggleTermo(); // Esto refresca la visibilidad de los cuadritos en el formulario
             const bodyLotes = document.getElementById('bodyLotes'); bodyLotes.innerHTML = '';
             document.getElementById('mostrarTambores').checked = d.inclTambores;
             d.items.forEach(i => {
@@ -480,13 +561,9 @@
             document.getElementById('conPallets').value = d.pCant > 0 ? 'SI' : 'NO';
             document.getElementById('cantPallets').value = d.pCant; document.getElementById('pesoPallet').value = d.pPesoU;
             togglePallets();
-            
-            // --- CARGA DE TERMÓGRAFOS AL EDITAR ---
             document.getElementById('conTermo').value = d.conTermo || 'NO';
-            document.getElementById('termo1').value = d.termo1 || ''; 
-            document.getElementById('termo2').value = d.termo2 || '';
+            document.getElementById('termo1').value = d.termo1; document.getElementById('termo2').value = d.termo2;
             toggleTermo();
-            
             verPestana('generador');
         }
 
@@ -497,220 +574,229 @@
 
         async function eliminarDeCloud(id) { if(confirm("¿Eliminar?")) { await window.fb.del(window.fb.docRef(window.fb.db, "packinglists", id)); renderizarHistorial(); } }
 
+        // --- FUNCIÓN PDF CORREGIDA: LOGO COLOR (HEAD), B&N (WATERMARK) Y TABLA RECTA ---
         async function generarPDFCore(data, lang) {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    const T = i18n[lang];
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const T = i18n[lang];
 
-    // 1. FUNCIÓN PARA CARGAR IMÁGENES (Logo y Marca de Agua)
-    const cargarImagenBN = (url) => {
-        return new Promise((resolve) => {
-            const img = new Image();
-            img.crossOrigin = "Anonymous";
-            img.src = url;
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                canvas.width = img.width;
-                canvas.height = img.height;
-                ctx.filter = 'grayscale(100%)';
-                ctx.drawImage(img, 0, 0);
-                resolve({
-                    original: img,
-                    bn: canvas.toDataURL('image/png')
+            // 1. CARGA DE IMÁGENES (Color para cabecera, B&N para marca de agua)
+            const cargarImagenBN = (url) => {
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    img.crossOrigin = "Anonymous";
+                    img.src = url;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        
+                        // Versión B&N para la marca de agua
+                        ctx.filter = 'grayscale(100%)';
+                        ctx.drawImage(img, 0, 0);
+                        
+                        resolve({
+                            original: img,
+                            bn: canvas.toDataURL('image/png')
+                        });
+                    };
+                    img.onerror = () => resolve(null);
                 });
             };
-            img.onerror = () => resolve(null);
-        });
-    };
 
-    const imagenes = await cargarImagenBN(LOGO_URL);
+            const imagenes = await cargarImagenBN(LOGO_URL);
 
-    // 2. ENCABEZADO
-    doc.setTextColor(0, 51, 102); 
-    doc.setFontSize(22);
-    doc.setFont("helvetica", 'bold'); 
-    doc.text("ECA AGROINDUSTRIA", 14, 22);
+            // 2. ENCABEZADO
+            doc.setTextColor(0, 51, 102); 
+            doc.setFontSize(22);
+            doc.setFont("helvetica", 'bold'); 
+            doc.text("ECA AGROINDUSTRIA", 14, 22);
+            
+            doc.setFontSize(10);
+            doc.setFont("helvetica", 'normal');
+            doc.text(T.titulo, 14, 30);
+
+            if (imagenes && imagenes.original) {
+                // Logo a COLOR en el encabezado
+                doc.addImage(imagenes.original, 'PNG', 150, 8, 45, 24); 
+            }
+
+            // 3. FRANJA DIVISORIA
+            doc.setDrawColor(0, 51, 102);
+            doc.setLineWidth(1.2);
+            doc.line(14, 38, 196, 38);
+
+            // 4. DATOS DEL EMBARQUE
+            doc.setTextColor(0, 0, 0);
+            const imprimirDato = (etiqueta, valor, x, y) => {
+                doc.setFontSize(7);
+                doc.setFont("helvetica", 'normal');
+                doc.text(etiqueta + ":", x, y);
+                const offset = doc.getTextWidth(etiqueta + ": ") + 1;
+                doc.setFontSize(9);
+                doc.setFont("helvetica", 'bold');
+                doc.text(valor || "N/A", x + offset, y);
+            };
+
+            imprimirDato(T.ref, data.ref, 14, 48);
+            imprimirDato(T.cliente, data.cliente, 14, 54);
+            imprimirDato(T.destino, data.pais, 14, 60);
+            
+            
+            if(data.via === 'MARITIMO') {
+                imprimirDato(T.etd, data.etd, 110, 48);
+                imprimirDato(T.eta, data.eta, 110, 54);
+                imprimirDato(T.cont, data.contenedor, 110, 60);
+                imprimirDato(T.buque, data.buque, 110, 66);
+                imprimirDato(T.booking, data.booking, 110, 72);
+            } else if(data.via === 'AEREO') {
+                imprimirDato(T.etd, data.etd, 110, 48);
+                imprimirDato(T.eta, data.eta, 110, 54);
+                imprimirDato(T.aero, data.aerolinea, 110, 60);
+                imprimirDato(T.vuelo, data.vuelo, 110, 66);
+                imprimirDato(T.awb, data.awb, 110, 72);
+            } else {
+                imprimirDato(T.chofer, data.chofer, 110, 48);
+                imprimirDato(T.patenteC, data.pCamion, 110, 54);
+                imprimirDato(T.patenteS, data.pSemi, 110, 60);
+                imprimirDato(T.empresa, data.empresa, 110, 66);
+            }
+
+		if(data.conTermo === 'SI') {
+    		// Unimos los dos termógrafos con una barra si ambos existen
+    		const listaTermos = [data.termo1, data.termo2].filter(t => t && t.trim() !== "").join(" / ");
     
-    doc.setFontSize(10);
-    doc.setFont("helvetica", 'normal');
-    doc.text(T.titulo, 14, 30);
+    		if(listaTermos) {
+        	// Los ubicamos en la posición Y=78 (debajo del último dato de logística)
+        		imprimirDato(T.hTermo, listaTermos, 110, 78);
+    			}
+		}
 
-    if (imagenes && imagenes.original) {
-        doc.addImage(imagenes.original, 'PNG', 150, 8, 45, 24); 
-    }
+            // 5. TABLA DE PRODUCTOS
+            const traduccionProductos = {
+                "ACEITE ESCENCIAL DE LIMON": "LEMON ESSENTIAL OIL", 
+                "ACEITE ESCENCIAL DE MANDARINA": "MANDARIN ESSENTIAL OIL", 
+                "ACEITE ESCENCIAL DE NARANJA": "ORANGE ESSENTIAL OIL", 
+                "ACEITE ESCENCIAL DE POMELO": "GRAPEFRUIT ESSENTIAL OIL", 
+                "ACEITE ESCENCIAL DE MANDARINA ORGANICA": "ORGANIC MANDARIN ESSENTIAL OIL", 
+                "ACEITE ESCENCIAL DE POMELO ORGANICO": "ORGANIC GRAPEFRUIT OIL", 
+                "ACEITE ESCENCIAL DE NARANJA ORGANICA": "ORGANIC ORANGE OIL", 
+                "ACEITE ESCENCIAL DE LIMON ORGANICO": "ORGANIC LEMON OIL", 
+                "JUGO CONCENTRADO DE LIMON": "CONCENTRATED LEMON JUICE", 
+                "JUGO CONCENTRADO DE MANDARINA": "CONCENTRATED MANDARIN JUICE", 
+                "JUGO CONCENTRADO DE NARANJA": "CONCENTRATED ORANGE JUICE", 
+                "JUGO CONCENTRADO DE NARANJA CLOUDY": "CLOUDY CONCENTRATED ORANGE JUICE",
+                "JUGO CONCENTRADO DE POMELO": "CONCENTRATED GRAPEFRUIT JUICE", 
+                "JUGO CONCENTRADO DE MANDARINA ORGANICA": "ORGANIC MANDARIN JUICE CONCENTRATE", 
+                "JUGO CONCENTRADO DE NARANJA ORGANICA": "ORGANIC ORANGE JUICE CONCENTRATE", 
+                "JUGO CONCENTRADO DE LIMON ORGANICO": "ORGANIC LEMON JUICE CONCENTRATE", 
+                "JUGO CONCENTRADO DE POMELO ORGANICO": "ORGANIC GRAPEFRUIT JUICE CONCENTRATE"
+            };
 
-    // 3. FRANJA DIVISORIA
-    doc.setDrawColor(0, 51, 102);
-    doc.setLineWidth(1.2);
-    doc.line(14, 38, 196, 38);
+            let pdfBody = [], tNeto = 0, tBruto = 0, tCant = 0;
+            data.items.forEach(i => {
+                const n = i.cant * i.netoU, b = i.cant * i.brutoU;
+                tCant += i.cant; tNeto += n; tBruto += b;
+                let nombreProducto = i.prod;
+                if(lang === 'EN' && traduccionProductos[i.prod.toUpperCase()]) {
+                    nombreProducto = traduccionProductos[i.prod.toUpperCase()];
+                }
+                let r = [nombreProducto, i.lote];
+                if(data.inclTambores) r.push(i.tamb);
+                r.push(i.cant, n.toFixed(2), b.toFixed(2));
+                pdfBody.push(r);
+            });
 
-    // 4. DATOS DEL EMBARQUE
-    doc.setTextColor(0, 0, 0);
-    const imprimirDato = (etiqueta, valor, x, y) => {
-        doc.setFontSize(7);
-        doc.setFont("helvetica", 'normal');
-        doc.text(etiqueta + ":", x, y);
-        const offset = doc.getTextWidth(etiqueta + ": ") + 1;
-        doc.setFontSize(9);
-        doc.setFont("helvetica", 'bold');
-        doc.text(valor || "N/A", x + offset, y);
-    };
+            let colSpanLabel = data.inclTambores ? 3 : 2;
+            let netMues = 0, bruMues = 0;
+            if(data.muestras) data.muestras.forEach(m => {
+                const n = m.cant * m.netoU, b = m.cant * m.brutoU;
+                netMues += n; bruMues += b;
+                let r = [T.hMuestra, m.lote];
+                if(data.inclTambores) r.push("-");
+                r.push(m.cant, n.toFixed(2), b.toFixed(2));
+                pdfBody.push(r);
+            });
 
-    // Bloque Izquierdo
-    imprimirDato(T.ref, data.ref, 14, 48);
-    imprimirDato(T.cliente, data.cliente, 14, 54);
-    imprimirDato(T.destino, data.pais, 14, 60);
-    
-    if(data.via !== 'TERRESTRE') {
-        const lPol = data.via === 'MARITIMO' ? T.carga : T.origen;
-        const lPod = data.via === 'MARITIMO' ? T.descarga : T.destAereo;
-        imprimirDato(lPol, data.pol, 14, 66);
-        imprimirDato(lPod, data.pod, 14, 72);
-    }
+            const pPeso = (data.pCant || 0) * (data.pPesoU || 0);
+            if(pPeso > 0) pdfBody.push([{ content: `${T.pallets} (${data.pCant} x ${data.pPesoU}kg)`, colSpan: data.inclTambores ? 5 : 4, styles: { halign: 'right', fontStyle: 'italic' } }, { content: pPeso.toFixed(2), styles: { halign: 'center', fontStyle: 'italic' } }]);
 
-    // Bloque Derecho
-    if(data.via === 'MARITIMO') {
-        imprimirDato(T.etd, data.etd, 110, 48);
-        imprimirDato(T.eta, data.eta, 110, 54);
-        imprimirDato(T.cont, data.contenedor, 110, 60);
-        imprimirDato(T.buque, data.buque, 110, 66);
-        imprimirDato(T.booking, data.booking, 110, 72);
-    } else if(data.via === 'AEREO') {
-        imprimirDato(T.etd, data.etd, 110, 48);
-        imprimirDato(T.eta, data.eta, 110, 54);
-        imprimirDato(T.aero, data.aerolinea, 110, 60);
-        imprimirDato(T.vuelo, data.vuelo, 110, 66);
-        imprimirDato(T.awb, data.awb, 110, 72);
-    } else {
-        imprimirDato(T.chofer, data.chofer, 110, 48);
-        imprimirDato(T.patenteC, data.pCamion, 110, 54);
-        imprimirDato(T.patenteS, data.pSemi, 110, 60);
-        imprimirDato(T.empresa, data.empresa, 110, 66);
-    }
+            let headers = [T.hProd, T.hLote];
+            if(data.inclTambores) headers.push(T.hTamb);
+            headers.push(T.hCant, T.hNetoU, T.hBrutoU);
 
-    // TERMÓGRAFOS
-    if (data.conTermo === "SI") {
-        const txtTermo = lang === 'EN' ? "THERMOGRAPHS:" : "TERMÓGRAFOS:";
-        doc.setFontSize(7);
-        doc.setFont("helvetica", 'normal');
-        doc.text(txtTermo, 14, 78);
-        doc.setFontSize(9);
-        doc.setFont("helvetica", 'bold');
-        doc.text(`${data.termo1 || ''} ${data.termo2 ? ' / ' + data.termo2 : ''}`, 40, 78);
-    }
+            const estilosColumnas = { 0: { cellWidth: 'auto' }, 1: { cellWidth: 25, halign: 'center' } };
+            let idx = 2;
+            if(data.inclTambores) { estilosColumnas[2] = { cellWidth: 22, halign: 'center' }; idx = 3; }
+            estilosColumnas[idx] = { cellWidth: 20, halign: 'center' };
+            estilosColumnas[idx + 1] = { cellWidth: 25, halign: 'center' };
+            estilosColumnas[idx + 2] = { cellWidth: 25, halign: 'center' };
 
-    // 5. TABLA DE PRODUCTOS Y TRADUCCIONES
-    const traduccionProductos = {
-        "ACEITE ESCENCIAL DE LIMON": "LEMON ESSENTIAL OIL", 
-        "ACEITE ESCENCIAL DE MANDARINA": "MANDARIN ESSENTIAL OIL", 
-        "ACEITE ESCENCIAL DE NARANJA": "ORANGE ESSENTIAL OIL", 
-        "ACEITE ESCENCIAL DE POMELO": "GRAPEFRUIT ESSENTIAL OIL", 
-        "ACEITE ESCENCIAL DE MANDARINA ORGANICA": "ORGANIC MANDARIN ESSENTIAL OIL", 
-        "ACEITE ESCENCIAL DE POMELO ORGANICO": "ORGANIC GRAPEFRUIT OIL", 
-        "ACEITE ESCENCIAL DE NARANJA ORGANICA": "ORGANIC ORANGE OIL", 
-        "ACEITE ESCENCIAL DE LIMON ORGANICO": "ORGANIC LEMON OIL", 
-        "JUGO CONCENTRADO DE LIMON": "CONCENTRATED LEMON JUICE", 
-        "JUGO CONCENTRADO DE MANDARINA": "CONCENTRATED MANDARIN JUICE", 
-        "JUGO CONCENTRADO DE NARANJA": "CONCENTRATED ORANGE JUICE", 
-        "JUGO CONCENTRADO DE NARANJA CLOUDY": "CLOUDY CONCENTRATED ORANGE JUICE",
-        "JUGO CONCENTRADO DE POMELO": "CONCENTRATED GRAPEFRUIT JUICE", 
-        "JUGO CONCENTRADO DE MANDARINA ORGANICA": "ORGANIC MANDARIN JUICE CONCENTRATE", 
-        "JUGO CONCENTRADO DE NARANJA ORGANICA": "ORGANIC ORANGE JUICE CONCENTRATE", 
-        "JUGO CONCENTRADO DE LIMON ORGANICO": "ORGANIC LEMON JUICE CONCENTRATE", 
-        "JUGO CONCENTRADO DE POMELO ORGANICO": "ORGANIC GRAPEFRUIT JUICE CONCENTRATE"
-    };
+            doc.autoTable({
+                startY: 80, 
+                head: [headers], 
+                body: pdfBody,
+                foot: [[
+                    { content: T.totalFinal, colSpan: colSpanLabel, styles: { halign: 'right' } }, 
+                    { content: tCant.toString(), styles: { halign: 'center' } }, 
+                    { content: (tNeto + netMues).toFixed(2), styles: { halign: 'center' } }, 
+                    { content: (tBruto + bruMues + pPeso).toFixed(2), styles: { halign: 'center' } }
+                ]],
+                theme: 'striped', 
+                headStyles: { 
+                    fillColor: [0, 51, 102], 
+                    fontSize: 8, 
+                    halign: 'center', 
+                    valign: 'middle', 
+                    minCellHeight: 10, 
+                    font: "helvetica",
+                    cellPadding: 3
+                },
+                bodyStyles: { fontSize: 7.5, font: "helvetica" },
+                footStyles: { fillColor: [0, 51, 102], textColor: 255, fontStyle: 'bold', fontSize: 9 },
+                columnStyles: estilosColumnas 
+            });
 
-    let pdfBody = [], tNeto = 0, tBruto = 0, tCant = 0;
-    
-    // Items principales
-    data.items.forEach(i => {
-        const n = i.cant * i.netoU, b = i.cant * i.brutoU;
-        tCant += i.cant; tNeto += n; tBruto += b;
-        let nombreProducto = i.prod;
-        if(lang === 'EN' && traduccionProductos[i.prod.toUpperCase()]) {
-            nombreProducto = traduccionProductos[i.prod.toUpperCase()];
-        }
-        let r = [nombreProducto, i.lote];
-        if(data.inclTambores) r.push(i.tamb);
-        r.push(i.cant, n.toFixed(2), b.toFixed(2));
-        pdfBody.push(r);
-    });
+            // --- MARCA DE AGUA DINÁMICA (B&N) ---
+            const postTableY = doc.lastAutoTable.finalY;
 
-    // Muestras
-    let netMues = 0, bruMues = 0;
-    if(data.muestras && data.muestras.length > 0) {
-        data.muestras.forEach(m => {
-            const n = m.cant * m.netoU, b = m.cant * m.brutoU;
-            netMues += n; bruMues += b;
-            let r = [lang === 'EN' ? "SAMPLE (No Commercial Value)" : "MUESTRA (Sin Valor Comercial)", m.lote];
-            if(data.inclTambores) r.push("-");
-            r.push(m.cant, n.toFixed(2), b.toFixed(2));
-            pdfBody.push(r);
-        });
-    }
+	// --- OBSERVACIONES ---
+	if (data.observaciones && data.observaciones.trim() !== "") {
 
-    // Pallets
-    const pPeso = (data.pCant || 0) * (data.pPesoU || 0);
-    if(pPeso > 0) {
-        pdfBody.push([{ 
-            content: `${T.pallets} (${data.pCant} x ${data.pPesoU}kg)`, 
-            colSpan: data.inclTambores ? 5 : 4, 
-            styles: { halign: 'right', fontStyle: 'italic' } 
-        }, { 
-            content: pPeso.toFixed(2), 
-            styles: { halign: 'center', fontStyle: 'italic' } 
-        }]);
-    }
+    	const margenInferior = 275; // límite superior del footer
+    	const lineHeight = 4; // altura aproximada por línea
 
-    let headers = [T.hProd, T.hLote];
-    if(data.inclTambores) headers.push(T.hTamb);
-    headers.push(T.hCant, T.hNeto, T.hBruto);
+    	doc.setFont("helvetica", "normal");
+    	doc.setFontSize(8);
 
-    // Renderizar Tabla
-    doc.autoTable({
-        startY: 82, 
-        head: [headers], 
-        body: pdfBody,
-        foot: [[
-            { content: T.totalFinal, colSpan: data.inclTambores ? 3 : 2, styles: { halign: 'right' } }, 
-            { content: tCant.toString(), styles: { halign: 'center' } }, 
-            { content: (tNeto + netMues).toFixed(2), styles: { halign: 'center' } }, 
-            { content: (tBruto + bruMues + pPeso).toFixed(2), styles: { halign: 'center' } }
-        ]],
-        theme: 'striped', 
-        headStyles: { fillColor: [0, 51, 102], fontSize: 8, halign: 'center', valign: 'middle' },
-        footStyles: { fillColor: [0, 51, 102], textColor: 255, fontStyle: 'bold', fontSize: 9 },
-        bodyStyles: { fontSize: 7.5 }
-    });
+    	const obsTexto = doc.splitTextToSize(data.observaciones, 180);
+    	const altoTexto = obsTexto.length * lineHeight;
 
-    // --- MANEJO DE ESPACIO POST-TABLA ---
-    let currentY = doc.lastAutoTable.finalY;
+    	// Calcula posición para que crezca hacia arriba
+    	const obsY = margenInferior - altoTexto - 6;
 
-    // 1. MARCA DE AGUA (Logo tenue)
-    if (imagenes && imagenes.bn) {
-        doc.saveGraphicsState();
-        doc.setGState(new doc.GState({ opacity: 0.15 })); 
-        doc.addImage(imagenes.bn, 'PNG', 45, currentY + 5, 120, 65); 
-        doc.restoreGraphicsState();
-    }
+    	// Título
+    	doc.setFont("helvetica", "bold");
+    	doc.setFontSize(9);
+    	doc.setTextColor(0, 51, 102);
+    	doc.text(lang === 'EN' ? "Observations:" : "Observaciones:", 14, obsY);
 
-    // 2. OBSERVACIONES
-    if (data.observaciones && data.observaciones.trim() !== "") {
-        if (currentY > 230) { doc.addPage(); currentY = 20; }
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(9);
-        doc.setTextColor(0, 51, 102);
-        doc.text(lang === 'EN' ? "Observations:" : "Observaciones:", 14, currentY + 15);
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(8);
-        doc.setTextColor(0, 0, 0);
-        const obsTexto = doc.splitTextToSize(data.observaciones, 180);
-        doc.text(obsTexto, 14, currentY + 20);
-        currentY += (obsTexto.length * 4) + 10;
-    }
+    	// Texto
+    	doc.setFont("helvetica", "normal");
+    	doc.setFontSize(8);
+    	doc.setTextColor(0, 0, 0);
+    	doc.text(obsTexto, 14, obsY + 5);
+	}
 
-    // 6. FIRMA
+            if (imagenes && imagenes.bn) {
+                doc.saveGraphicsState();
+                doc.setGState(new doc.GState({ opacity: 0.20 })); 
+                doc.addImage(imagenes.bn, 'PNG', 45, postTableY + 10, 120, 65); 
+                doc.restoreGraphicsState();
+            }
+
+            // 6. FIRMA
             const finalY = postTableY + 25; 
             const cargarFirmaImg = (url) => {
                 return new Promise((resolve) => {
@@ -740,103 +826,6 @@
             const textoFirma = lang === 'EN' ? "Authorized Signature" : "Firma Autorizada";
             doc.text(textoFirma, 146, finalY + 44);
 
-    // 4. PIE DE PÁGINA (Para todas las hojas)
-    const totalPaginas = doc.internal.getNumberOfPages();
-    for (let i = 1; i <= totalPaginas; i++) {
-        doc.setPage(i);
-        doc.setFontSize(7);
-        doc.setTextColor(100);
-        doc.setDrawColor(200, 200, 200);
-        doc.line(14, 280, 196, 280);
-        
-        const linea1 = "ECA AGROINDUSTRIA - RUTA NACIONAL 14 KM.265 (3201) CONCORDIA - ENTRE RIOS - ARGENTINA";
-        doc.text(linea1, 14, 284);
-        
-        const linea2 = "www.ecaagroindustria.com | info@ecaagroindustria.com | operaciones@ecaagroindustria.com";
-        doc.text(linea2, 14, 288);
-        
-        const pieDerecha = lang === 'EN' ? `Page ${i} of ${totalPaginas}` : `Página ${i} de ${totalPaginas}`;
-        doc.text(pieDerecha, 196, 288, { align: 'right' });
-    }
-
-    doc.save(`PL_${data.ref}_${lang}.pdf`);
-}
-            }
-
-            const pPeso = (data.pCant || 0) * (data.pPesoU || 0);
-            if(pPeso > 0) pdfBody.push([{ content: `${T.pallets} (${data.pCant} x ${data.pPesoU}kg)`, colSpan: data.inclTambores ? 5 : 4, styles: { halign: 'right', fontStyle: 'italic' } }, { content: pPeso.toFixed(2), styles: { halign: 'center', fontStyle: 'italic' } }]);
-
-            let headers = [T.hProd, T.hLote];
-            if(data.inclTambores) headers.push(T.hTamb);
-            headers.push(T.hCant, T.hNeto, T.hBruto);
-
-            let colSpanLabel = data.inclTambores ? 3 : 2;
-            const estilosColumnas = { 0: { cellWidth: 'auto' }, 1: { cellWidth: 25, halign: 'center' } };
-            let idx = 2;
-            if(data.inclTambores) { estilosColumnas[2] = { cellWidth: 22, halign: 'center' }; idx = 3; }
-            estilosColumnas[idx] = { cellWidth: 20, halign: 'center' };
-            estilosColumnas[idx + 1] = { cellWidth: 25, halign: 'center' };
-            estilosColumnas[idx + 2] = { cellWidth: 25, halign: 'center' };
-
-            doc.autoTable({
-                startY: 82, 
-                head: [headers], 
-                body: pdfBody,
-                foot: [[
-                    { content: T.totalFinal, colSpan: colSpanLabel, styles: { halign: 'right' } }, 
-                    { content: tCant.toString(), styles: { halign: 'center' } }, 
-                    { content: (tNeto + netMues).toFixed(2), styles: { halign: 'center' } }, 
-                    { content: (tBruto + bruMues + pPeso).toFixed(2), styles: { halign: 'center' } }
-                ]],
-                theme: 'striped', 
-                headStyles: { fillColor: [0, 51, 102], fontSize: 8, halign: 'center', valign: 'middle', minCellHeight: 10, font: "helvetica", cellPadding: 3 },
-                bodyStyles: { fontSize: 7.5, font: "helvetica" },
-                footStyles: { fillColor: [0, 51, 102], textColor: 255, fontStyle: 'bold', fontSize: 9 },
-                columnStyles: estilosColumnas 
-            });
-
-            const postTableY = doc.lastAutoTable.finalY;
-
-            // --- OBSERVACIONES ---
-            if (data.observaciones && data.observaciones.trim() !== "") {
-                const margenInferior = 275;
-                const lineHeight = 4;
-                doc.setFont("helvetica", "normal");
-                doc.setFontSize(8);
-                const obsTexto = doc.splitTextToSize(data.observaciones, 180);
-                const altoTexto = obsTexto.length * lineHeight;
-                const obsY = margenInferior - altoTexto - 30; // Ajustado para no chocar con firma
-
-                doc.setFont("helvetica", "bold");
-                doc.setFontSize(9);
-                doc.setTextColor(0, 51, 102);
-                doc.text(lang === 'EN' ? "Observations:" : "Observaciones:", 14, obsY);
-                doc.setFont("helvetica", "normal");
-                doc.setFontSize(8);
-                doc.setTextColor(0, 0, 0);
-                doc.text(obsTexto, 14, obsY + 5);
-            }
-
-            if (imagenes && imagenes.bn) {
-                doc.saveGraphicsState();
-                doc.setGState(new doc.GState({ opacity: 0.20 })); 
-                doc.addImage(imagenes.bn, 'PNG', 45, postTableY + 10, 120, 65); 
-                doc.restoreGraphicsState();
-            }
-
-            // 6. FIRMA
-            const finalY = postTableY + 25; 
-            doc.setDrawColor(0, 0, 0);
-            doc.setLineWidth(0.5);
-            doc.line(135, finalY + 35, 185, finalY + 35); 
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(9);
-            doc.text("ECA AGROINDUSTRIA", 142, finalY + 40); 
-            doc.setFont("helvetica", "normal");
-            doc.setFontSize(8);
-            const textoFirma = lang === 'EN' ? "Authorized Signature" : "Firma Autorizada";
-            doc.text(textoFirma, 146, finalY + 44);
-
             // 7. PIE DE PÁGINA
             const totalPaginas = doc.internal.getNumberOfPages();
             for (let i = 1; i <= totalPaginas; i++) {
@@ -845,14 +834,18 @@
                 doc.setTextColor(100);
                 doc.setDrawColor(200, 200, 200);
                 doc.line(14, 280, 196, 280);
+
                 const linea1 = "ECA AGROINDUSTRIA - RUTA NACIONAL 14 KM.265 (3201) CONCORDIA - ENTRE RIOS - ARGENTINA";
                 doc.text(linea1, 14, 284);
+
                 const linea2 = "www.ecaagroindustria.com | info@ecaagroindustria.com | operaciones@ecaagroindustria.com";
                 doc.text(linea2, 14, 288);
+
                 const pieDerecha = lang === 'EN' ? `Page ${i} of ${totalPaginas}` : `Página ${i} de ${totalPaginas}`;
                 doc.text(pieDerecha, 196, 288, { align: 'right' });
             }
 
+            // 8. GUARDAR CON NOMBRE DINÁMICO (REF + CONTENEDOR)
             const nombreArchivo = `PL_${data.ref}_${data.contenedor || 'SIN_CONT'}_${lang}.pdf`;
             doc.save(nombreArchivo);
         }
