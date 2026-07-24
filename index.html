@@ -839,16 +839,39 @@
                 doc.addImage(imgFirma, 'JPEG', 150, finalY + 5, 18, 28, undefined, 'FAST'); 
             }
 
-            doc.setDrawColor(0, 0, 0);
-            doc.setLineWidth(0.5);
-            doc.line(135, finalY + 35, 185, finalY + 35); 
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(9);
-            doc.text("ECA AGROINDUSTRIA", 142, finalY + 40); 
-            doc.setFont("helvetica", "normal");
-            doc.setFontSize(8);
-            const textoFirma = lang === 'EN' ? "Authorized Signature" : "Firma Autorizada";
-            doc.text(textoFirma, 146, finalY + 44);
+            // Dibuja la línea de la firma
+doc.setDrawColor(0, 0, 0);
+doc.setLineWidth(0.5);
+doc.line(135, finalY + 35, 185, finalY + 35); 
+
+// Título de la empresa
+doc.setFont("helvetica", "bold");
+doc.setFontSize(9);
+doc.text("ECA AGROINDUSTRIA", 142, finalY + 40); 
+
+// Texto de la firma
+doc.setFont("helvetica", "normal");
+doc.setFontSize(8);
+const textoFirma = lang === 'EN' ? "Authorized Signature" : "Firma Autorizada";
+doc.text(textoFirma, 146, finalY + 44);
+
+// Formateo dinámico de la fecha según el idioma
+const hoy = new Date();
+const locale = lang === 'EN' ? 'en-US' : 'es-AR';
+const fechaFormateada = hoy.toLocaleDateString(locale, {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric'
+});
+
+// Generación del texto "Lugar y Fecha"
+const textoFecha = lang === 'EN' 
+  ? `Concordia, ${fechaFormateada}` 
+  : `Concordia, ${fechaFormateada}`;
+
+// Agregamos la fecha unos mm más abajo (en finalY + 48)
+doc.setFontSize(7.5);
+doc.text(textoFecha, 138, finalY + 48);
 
             // 7. PIE DE PÁGINA
             const totalPaginas = doc.internal.getNumberOfPages();
