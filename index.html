@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ECA Agroindustria - Packing List Master v25.4 Extended</title>
+    <title>ECA Agroindustria - Packing List Master v25.4 Extended + Paste</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
@@ -53,6 +53,7 @@
             setTimeout(() => { 
                 cargarListasDesplegables();
                 renderizarHistorial(); 
+                activarPegadoPlanilla();
             }, 1000);
         });
     </script>
@@ -139,8 +140,12 @@
                         </div>
                     </div>
 
+                    <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
+                        💡 <strong>Sugerencia de Pegado:</strong> Copia las celdas desde Excel o Sheets (Columnas: <em>Producto, Batch, F. Vencimiento, Cantidad, Peso Unitario</em>) y haz clic sobre cualquier celda de la tabla para presionar <strong>Ctrl + V</strong>.
+                    </div>
+
                     <div class="overflow-x-auto rounded-xl border border-slate-300 shadow-sm bg-white">
-                        <table class="w-full text-left border-collapse">
+                        <table class="w-full text-left border-collapse" id="tablaLotes">
                             <thead>
                                 <tr class="bg-slate-800 text-white text-[10px] uppercase tracking-wider text-center">
                                     <th class="p-3 text-left w-1/3">Producto 🔽</th>
@@ -160,7 +165,6 @@
 
                 <!-- 3 Y 4. DATOS MARÍTIMOS Y FECHAS -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- DATOS MARÍTIMOS -->
                     <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
                         <div class="flex items-center gap-2 border-b border-slate-200 pb-3">
                             <span class="bg-blue-900 text-white rounded-full w-6 h-6 flex items-center justify-center font-bold text-xs">3</span>
@@ -194,7 +198,6 @@
                         </div>
                     </div>
 
-                    <!-- FECHAS -->
                     <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
                         <div class="flex items-center gap-2 border-b border-slate-200 pb-3">
                             <span class="bg-blue-900 text-white rounded-full w-6 h-6 flex items-center justify-center font-bold text-xs">4</span>
@@ -330,7 +333,6 @@
         <div id="pestana-choferes" class="hidden bg-white p-8 rounded-xl shadow-2xl border-t-8 border-blue-900 space-y-8">
             <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tight italic border-b pb-4">Gestión de Choferes Frecuentes</h2>
             
-            <!-- FORMULARIO CHOFER -->
             <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 shadow-inner space-y-4">
                 <h3 class="text-md font-bold text-blue-900 uppercase border-b pb-2">➕ Registrar Nuevo Chofer</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -362,7 +364,6 @@
                 </div>
             </div>
 
-            <!-- TABLA CHOFERES -->
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
@@ -450,54 +451,18 @@
 
         const i18n = {
             ES: {
-                titulo: "PACKING LIST MASTER",
-                ref: "EXPORTACIÓN",
-                week: "WEEK",
-                modalidad: "MODALIDAD",
-                status: "STATUS",
-                docs: "DOCS. ENVIADOS",
-                cliente: "CLIENTE",
-                pod: "POD",
-                flagPod: "FLAG POD",
-                booking: "BOOKING",
-                masterBl: "MASTER BL",
-                containerId: "CONTAINER ID",
-                fechaCarga: "FECHA CARGA",
-                cutoffDoc: "CUT-OFF DOC",
-                cutoffFisico: "CUT-OFF FISICO",
-                etd: "ETD",
-                eta: "ETA",
-                transitTime: "TRANSIT TIME",
-                transporte: "TRANSPORTE",
-                chofer: "CHOFER",
-                dni: "DNI",
-                tractor: "TRACTOR",
-                semi: "SEMI"
+                titulo: "PACKING LIST MASTER", ref: "EXPORTACIÓN", week: "WEEK", modalidad: "MODALIDAD",
+                status: "STATUS", docs: "DOCS. ENVIADOS", cliente: "CLIENTE", pod: "POD", flagPod: "FLAG POD",
+                booking: "BOOKING", masterBl: "MASTER BL", containerId: "CONTAINER ID", fechaCarga: "FECHA CARGA",
+                cutoffDoc: "CUT-OFF DOC", cutoffFisico: "CUT-OFF FISICO", etd: "ETD", eta: "ETA", transitTime: "TRANSIT TIME",
+                transporte: "TRANSPORTE", chofer: "CHOFER", dni: "DNI", tractor: "TRACTOR", semi: "SEMI"
             },
             EN: {
-                titulo: "MASTER PACKING LIST",
-                ref: "EXPORT REF",
-                week: "WEEK",
-                modalidad: "MODALITY",
-                status: "STATUS",
-                docs: "DOCS SENT",
-                cliente: "CUSTOMER",
-                pod: "POD",
-                flagPod: "FLAG POD",
-                booking: "BOOKING",
-                masterBl: "MASTER BL",
-                containerId: "CONTAINER ID",
-                fechaCarga: "LOADING DATE",
-                cutoffDoc: "CUT-OFF DOC",
-                cutoffFisico: "CUT-OFF PHYSICAL",
-                etd: "ETD",
-                eta: "ETA",
-                transitTime: "TRANSIT TIME",
-                transporte: "CARRIER",
-                chofer: "DRIVER",
-                dni: "ID / DNI",
-                tractor: "TRUCK",
-                semi: "TRAILER"
+                titulo: "MASTER PACKING LIST", ref: "EXPORT REF", week: "WEEK", modalidad: "MODALITY",
+                status: "STATUS", docs: "DOCS SENT", cliente: "CUSTOMER", pod: "POD", flagPod: "FLAG POD",
+                booking: "BOOKING", masterBl: "MASTER BL", containerId: "CONTAINER ID", fechaCarga: "LOADING DATE",
+                cutoffDoc: "CUT-OFF DOC", cutoffFisico: "CUT-OFF PHYSICAL", etd: "ETD", eta: "ETA", transitTime: "TRANSIT TIME",
+                transporte: "CARRIER", chofer: "DRIVER", dni: "ID / DNI", tractor: "TRUCK", semi: "TRAILER"
             }
         };
 
@@ -521,6 +486,65 @@
 
             document.getElementById('bodyLotes').innerHTML = '';
             agregarFila('bodyLotes');
+        }
+
+        /* FUNCIÓN PARA PEGAR DATOS DESDE EXCEL O SHEETS */
+        function activarPegadoPlanilla() {
+            const tabla = document.getElementById('tablaLotes');
+            tabla.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const textoCopiado = (e.clipboardData || window.clipboardData).getData('text');
+                if (!textoCopiado) return;
+
+                const filasTexto = textoCopiado.trim().split(/\r\n|\n|\r/);
+                const bodyLotes = document.getElementById('bodyLotes');
+
+                // Si la primera fila actual está vacía, la usamos antes de agregar más
+                let filasExistentes = bodyLotes.querySelectorAll('tr');
+                if (filasExistentes.length === 1) {
+                    const primerSelect = filasExistentes[0].querySelector('select');
+                    const primerInp = filasExistentes[0].querySelector('input');
+                    if (!primerSelect.value && !primerInp.value) {
+                        bodyLotes.innerHTML = '';
+                    }
+                }
+
+                filasTexto.forEach(filaStr => {
+                    if (!filaStr.trim()) return;
+                    const columnas = filaStr.split('\t'); // Tabulaciones estándar de Excel/Sheets
+
+                    agregarFila('bodyLotes');
+                    const nuevaFila = bodyLotes.lastElementChild;
+                    const selectProd = nuevaFila.querySelector('select');
+                    const inputs = nuevaFila.querySelectorAll('input');
+
+                    // 1. Producto (Trata de coincidir exactamente con las opciones o asigna el valor)
+                    if (columnas[0]) {
+                        const valProd = columnas[0].trim();
+                        let coincide = Array.from(selectProd.options).find(o => o.value.toLowerCase() === valProd.toLowerCase());
+                        if (coincide) {
+                            selectProd.value = coincide.value;
+                        } else {
+                            selectProd.value = valProd;
+                        }
+                    }
+
+                    // 2. Batch (Lote)
+                    if (columnas[1]) inputs[0].value = columnas[1].trim();
+
+                    // 3. Fecha Vencimiento
+                    if (columnas[2]) inputs[1].value = columnas[2].trim();
+
+                    // 4. Cantidad
+                    if (columnas[3]) inputs[2].value = columnas[3].trim().replace(',', '.');
+
+                    // 5. Peso Unitario
+                    if (columnas[4]) inputs[3].value = columnas[4].trim().replace(',', '.');
+
+                    // Recalcular Netos y Brutos
+                    calcularFila(inputs[2]);
+                });
+            });
         }
 
         async function cargarChoferesCloud() {
