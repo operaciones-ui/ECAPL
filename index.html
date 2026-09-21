@@ -356,7 +356,9 @@
                 hBrutoT: "BRUTO TOTAL LOTE",
                 hGalones: "GALONES",
                 totalFinal: "PESO TOTAL FINAL",
-                pallets: "PALLETS"
+                pallets: "PALLETS",
+                copiaCarga: "COPIA CARGA",
+                copiaPorteria: "COPIA PORTERÍA / BALANZA"
             },
             EN: {
                 titulo: "PACKING LIST",
@@ -379,9 +381,9 @@
                 awb: "AIR WAYBILL",
                 chofer: "DRIVER",
                 dni: "ID / DNI",
-                patenteC: "TRACTOR PLATE",
-                patenteS: "TRAILER PLATE",
-                empresa: "COMPANY",
+                patenteC: "TRUCK PLATE",
+                patenteS: "SEMI PLATE",
+                empresa: "TR. COMPANY",
                 transporteUnidad: "TRANSPORT UNIT DETAILS",
                 hTermo: "THERMOGRAPHS",
                 hMuestra: "SAMPLES WITH NO COMMERCIAL VALUE",
@@ -395,7 +397,9 @@
                 hBrutoT: "TOTAL GROSS WEIGHT",
                 hGalones: "GALLONS",
                 totalFinal: "FINAL TOTAL WEIGHT",
-                pallets: "PALLETS"
+                pallets: "PALLETS",
+                copiaCarga: "SHIPMENT COPY",
+                copiaPorteria: "GATE / SCALE COPY"
             }
         };
 
@@ -547,7 +551,7 @@
 
                 await window.fb.add(window.fb.col(window.fb.db, "packinglists"), data);
                 
-                generarPDFCore(data, document.getElementById('idiomaDoc').value);
+                await generarPDFCore(data, document.getElementById('idiomaDoc').value);
                 
                 alert("Guardado con éxito");
                 renderizarHistorial(); 
@@ -691,77 +695,19 @@
                 });
             };
 
-            const imagenes = await cargarImagenBN(LOGO_URL);
-
-            doc.setTextColor(0, 51, 102); 
-            doc.setFontSize(22);
-            doc.setFont("helvetica", 'bold'); 
-            doc.text("ECA AGROINDUSTRIA", 14, 22);
-            
-            doc.setFontSize(10);
-            doc.setFont("helvetica", 'normal');
-            doc.text(T.titulo, 14, 30);
-
-            if (imagenes && imagenes.original) {
-                doc.addImage(imagenes.original, 'JPEG', 170, 8, 25, 0, undefined, 'FAST'); 
-            }
-
-            doc.setDrawColor(0, 51, 102);
-            doc.setLineWidth(1.2);
-            doc.line(14, 38, 196, 38);
-
-            doc.setTextColor(0, 0, 0);
-            const imprimirDato = (etiqueta, valor, x, y) => {
-                doc.setFontSize(7);
-                doc.setFont("helvetica", 'normal');
-                doc.text(etiqueta + ":", x, y);
-                const offset = doc.getTextWidth(etiqueta + ": ") + 1;
-                doc.setFontSize(9);
-                doc.setFont("helvetica", 'bold');
-                doc.text(valor || "N/A", x + offset, y);
+            const cargarFirmaImg = (url) => {
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    img.crossOrigin = "Anonymous";
+                    img.src = url;
+                    img.onload = () => resolve(img);
+                    img.onerror = () => resolve(null);
+                });
             };
 
-            // COLUMNA IZQUIERDA
-            imprimirDato(T.ref, data.ref, 14, 48);
-            imprimirDato(T.po, data.po, 14, 54);
-            imprimirDato(T.cliente, data.cliente, 14, 60);
-            imprimirDato(T.destino, data.pais, 14, 66);
-            
-            if(data.via === 'MARITIMO') {
-                imprimirDato(T.pol, data.pol, 14, 72);
-                imprimirDato(T.pod, data.pod, 14, 78);
-                
-                // COLUMNA DERECHA MARÍTIMO
-                imprimirDato(T.etd, data.etd, 110, 48);
-                imprimirDato(T.eta, data.eta, 110, 54);
-                imprimirDato(T.cont, data.contenedor, 110, 60);
-                imprimirDato(T.buque, data.buque, 110, 66);
-                imprimirDato(T.booking, data.booking, 110, 72);
-                imprimirDato(T.bl, data.bl, 110, 78);
-            } else if(data.via === 'AEREO') {
-                imprimirDato(T.pol, data.pol, 14, 72);
-                imprimirDato(T.pod, data.pod, 14, 78);
-
-                // COLUMNA DERECHA AÉREO
-                imprimirDato(T.etd, data.etd, 110, 48);
-                imprimirDato(T.eta, data.eta, 110, 54);
-                imprimirDato(T.aero, data.aerolinea, 110, 60);
-                imprimirDato(T.vuelo, data.vuelo, 110, 66);
-                imprimirDato(T.awb, data.awb, 110, 72);
-            } else {
-                // COLUMNA DERECHA TERRESTRE
-                imprimirDato(T.chofer, data.chofer, 110, 48);
-                imprimirDato(T.patenteC, data.pCamion, 110, 54);
-                imprimirDato(T.patenteS, data.pSemi, 110, 60);
-                imprimirDato(T.empresa, data.empresa, 110, 66);
-            }
-
-            if(data.conTermo === 'SI') {
-                const listaTermos = [data.termo1, data.termo2].filter(t => t && t.trim() !== "").join(" / ");
-                if(listaTermos) {
-                    imprimirDato(T.hTermo, listaTermos, 110, 84);
-                }
-            }
+            const imagenes = await cargarImagenBN(LOGO_URL);
+            const firmaURL = "https://lh3.googleusercontent.com/d/1m-O260uMHL7YN1A-sqB1ooiztmaU6Gb4";
+            const imgFirma = await cargarFirmaImg(firmaURL);
 
             const traduccionProductos = {
                 "ACEITE ESCENCIAL DE LIMON": "LEMON ESSENTIAL OIL", 
@@ -785,219 +731,288 @@
                 "JUGO CONCENTRADO DE POMELO ORGANICO": "ORGANIC GRAPEFRUIT JUICE CONCENTRATE"
             };
 
-            let pdfBody = [], tNeto = 0, tBruto = 0, tCant = 0, tGalones = 0;
-            data.items.forEach(i => {
-                const n = i.cant * i.netoU, b = i.cant * i.brutoU;
-                tCant += i.cant; tNeto += n; tBruto += b;
+            // Función interna para construir el contenido completo de una página
+            const renderizarContenidoPagina = () => {
+                doc.setTextColor(0, 51, 102); 
+                doc.setFontSize(22);
+                doc.setFont("helvetica", 'bold'); 
+                doc.text("ECA AGROINDUSTRIA", 14, 22);
                 
-                let galonesLote = 0;
-                if(esUSA && i.densidad > 0) {
-                    galonesLote = n / (i.densidad * 3.78541);
-                    tGalones += galonesLote;
+                doc.setFontSize(10);
+                doc.setFont("helvetica", 'normal');
+                doc.text(T.titulo, 14, 30);
+
+                if (imagenes && imagenes.original) {
+                    doc.addImage(imagenes.original, 'JPEG', 170, 8, 25, 0, undefined, 'FAST'); 
                 }
 
-                let nombreProducto = i.prod;
-                if(lang === 'EN' && traduccionProductos[i.prod.toUpperCase()]) {
-                    nombreProducto = traduccionProductos[i.prod.toUpperCase()];
-                }
-                let r = [nombreProducto, i.lote];
-                if(data.inclTambores) r.push(i.tamb);
-                r.push(i.cant, (i.netoU||0).toFixed(2), n.toFixed(2), (i.brutoU||0).toFixed(2), b.toFixed(2));
-                if(esUSA) r.push(galonesLote > 0 ? galonesLote.toFixed(2) : "-");
-                pdfBody.push(r);
-            });
+                doc.setDrawColor(0, 51, 102);
+                doc.setLineWidth(1.2);
+                doc.line(14, 38, 196, 38);
 
-            let colSpanLabel = 2;
-            let netMues = 0, bruMues = 0;
-            if(data.muestras) data.muestras.forEach(m => {
-                const n = m.cant * m.netoU, b = m.cant * m.brutoU;
-                netMues += n; bruMues += b;
-                let r = [T.hMuestra, m.lote];
-                if(data.inclTambores) r.push("");
-                r.push(m.cant, (m.netoU||0).toFixed(2), n.toFixed(2), (m.brutoU||0).toFixed(2), b.toFixed(2));
-                if(esUSA) r.push("-");
-                pdfBody.push(r);
-            });
-
-            const pPeso = (data.pCant || 0) * (data.pPesoU || 0);
-            if(pPeso > 0) {
-                let totalCols = 7 + (data.inclTambores ? 1 : 0) + (esUSA ? 1 : 0);
-                let rowPallets = [
-                    { content: `${T.pallets} (${data.pCant} x ${data.pPesoU}kg)`, colSpan: totalCols - (esUSA ? 2 : 1), styles: { halign: 'right', fontStyle: 'italic' } }, 
-                    { content: pPeso.toFixed(2), styles: { halign: 'center', fontStyle: 'italic' } }
-                ];
-                if(esUSA) rowPallets.push({ content: "-", styles: { halign: 'center' } });
-                pdfBody.push(rowPallets);
-            }
-
-            let headers = [T.hProd, T.hLote];
-            if(data.inclTambores) headers.push(T.hTamb);
-            headers.push(T.hCant, T.hNetoU, T.hNetoT, T.hBrutoU, T.hBrutoT);
-            if(esUSA) headers.push(T.hGalones);
-
-            const estilosColumnas = { 
-                0: { cellWidth: 'auto' }, 
-                1: { cellWidth: 16, halign: 'center' } 
-            };
-            let idx = 2;
-            if(data.inclTambores) { 
-                estilosColumnas[2] = { cellWidth: 14, halign: 'center' }; 
-                idx = 3; 
-            }
-            estilosColumnas[idx] = { cellWidth: 10, halign: 'center' };       
-            estilosColumnas[idx + 1] = { cellWidth: 18, halign: 'center' };   
-            estilosColumnas[idx + 2] = { cellWidth: 20, halign: 'center' };   
-            estilosColumnas[idx + 3] = { cellWidth: 18, halign: 'center' };   
-            estilosColumnas[idx + 4] = { cellWidth: 20, halign: 'center' };   
-            if(esUSA) estilosColumnas[idx + 5] = { cellWidth: 20, halign: 'center' };
-
-            let footRow = [
-                { content: T.totalFinal, colSpan: colSpanLabel, styles: { halign: 'right' } }, 
-                { content: tCant.toString(), styles: { halign: 'center' } }, 
-                { content: "", styles: { halign: 'center' } },
-                { content: (tNeto + netMues).toFixed(2), styles: { halign: 'center' } }, 
-                { content: "", styles: { halign: 'center' } },
-                { content: (tBruto + bruMues + pPeso).toFixed(2), styles: { halign: 'center' } }
-            ];
-            if(esUSA) footRow.push({ content: tGalones > 0 ? tGalones.toFixed(2) : "-", styles: { halign: 'center' } });
-
-            doc.autoTable({
-                startY: 86, 
-                head: [headers], 
-                body: pdfBody,
-                foot: [footRow],
-                theme: 'striped', 
-                headStyles: { 
-                    fillColor: [0, 51, 102], 
-                    fontSize: 7, 
-                    halign: 'center', 
-                    valign: 'middle', 
-                    minCellHeight: 10, 
-                    font: "helvetica",
-                    cellPadding: 2
-                },
-                bodyStyles: { fontSize: 7, font: "helvetica" },
-                footStyles: { fillColor: [0, 51, 102], textColor: 255, fontStyle: 'bold', fontSize: 8 },
-                columnStyles: estilosColumnas 
-            });
-
-            let currentY = doc.lastAutoTable.finalY + 8;
-
-            // LEYENDA MERCOSUR EXCLUSIVA PARA ALEMANIA Y PAÍSES BAJOS
-            if (esEuropaMercosur) {
-                const leyendaTexto = "The exporter of the products covered by this document (CUIT number: 30-56116760-1) declares that, except where otherwise clearly indicated, these products are of MERCOSUR preferential origin.";
-                
-                doc.setFont("helvetica", "italic");
-                doc.setFontSize(7.5);
-                doc.setTextColor(30, 41, 59);
-
-                const lineasLeyenda = doc.splitTextToSize(leyendaTexto, 182);
-                doc.text(lineasLeyenda, 14, currentY);
-                currentY += (lineasLeyenda.length * 3.5) + 4;
-            }
-
-            // DATOS DE UNIDAD DE TRANSPORTE (UBICADOS ABAJO DEL TODO POR ENCIMA DE LA LÍNEA DEL PIE DE PÁGINA)
-            if (mostrarDatosTransporteInferior && (data.chofer || data.pCamion || data.empresa)) {
-                let posTransporteY = 262;
-
-                doc.setFont("helvetica", "bold");
-                doc.setFontSize(8);
-                doc.setTextColor(0, 51, 102);
-                doc.text(T.transporteUnidad, 14, posTransporteY); 
-                
-                posTransporteY += 3;
-                doc.setDrawColor(200, 200, 200);
-                doc.setLineWidth(0.3);
-                doc.line(14, posTransporteY, 196, posTransporteY); 
-                
-                posTransporteY += 5;
-                doc.setFontSize(7.5);
-                doc.setFont("helvetica", "normal");
                 doc.setTextColor(0, 0, 0);
+                const imprimirDato = (etiqueta, valor, x, y) => {
+                    doc.setFontSize(7);
+                    doc.setFont("helvetica", 'normal');
+                    doc.text(etiqueta + ":", x, y);
+                    const offset = doc.getTextWidth(etiqueta + ": ") + 1;
+                    doc.setFontSize(9);
+                    doc.setFont("helvetica", 'bold');
+                    doc.text(valor || "N/A", x + offset, y);
+                };
 
-                const infoTransporte = [
-                    `${T.chofer}: ${data.chofer || '-'}`,
-                    `${T.dni}: ${data.dniChofer || '-'}`,
-                    `${T.patenteC}: ${data.pCamion || '-'}`,
-                    `${T.patenteS}: ${data.pSemi || '-'}`,
-                    `${T.empresa}: ${data.empresa || '-'}`
-                ].join("   |   ");
+                // COLUMNA IZQUIERDA
+                imprimirDato(T.ref, data.ref, 14, 48);
+                imprimirDato(T.po, data.po, 14, 54);
+                imprimirDato(T.cliente, data.cliente, 14, 60);
+                imprimirDato(T.destino, data.pais, 14, 66);
+                
+                if(data.via === 'MARITIMO') {
+                    imprimirDato(T.pol, data.pol, 14, 72);
+                    imprimirDato(T.pod, data.pod, 14, 78);
+                    
+                    // COLUMNA DERECHA MARÍTIMO
+                    imprimirDato(T.etd, data.etd, 110, 48);
+                    imprimirDato(T.eta, data.eta, 110, 54);
+                    imprimirDato(T.cont, data.contenedor, 110, 60);
+                    imprimirDato(T.buque, data.buque, 110, 66);
+                    imprimirDato(T.booking, data.booking, 110, 72);
+                    imprimirDato(T.bl, data.bl, 110, 78);
+                } else if(data.via === 'AEREO') {
+                    imprimirDato(T.pol, data.pol, 14, 72);
+                    imprimirDato(T.pod, data.pod, 14, 78);
 
-                doc.text(infoTransporte, 14, posTransporteY);
-            }
+                    // COLUMNA DERECHA AÉREO
+                    imprimirDato(T.etd, data.etd, 110, 48);
+                    imprimirDato(T.eta, data.eta, 110, 54);
+                    imprimirDato(T.aero, data.aerolinea, 110, 60);
+                    imprimirDato(T.vuelo, data.vuelo, 110, 66);
+                    imprimirDato(T.awb, data.awb, 110, 72);
+                } else {
+                    // COLUMNA DERECHA TERRESTRE
+                    imprimirDato(T.chofer, data.chofer, 110, 48);
+                    imprimirDato(T.patenteC, data.pCamion, 110, 54);
+                    imprimirDato(T.patenteS, data.pSemi, 110, 60);
+                    imprimirDato(T.empresa, data.empresa, 110, 66);
+                }
 
-            if (data.observaciones && data.observaciones.trim() !== "") {
-                const margenInferior = 255;
-                const lineHeight = 4;
+                if(data.conTermo === 'SI') {
+                    const listaTermos = [data.termo1, data.termo2].filter(t => t && t.trim() !== "").join(" / ");
+                    if(listaTermos) {
+                        imprimirDato(T.hTermo, listaTermos, 110, 84);
+                    }
+                }
 
-                doc.setFont("helvetica", "normal");
-                doc.setFontSize(8);
+                let pdfBody = [], tNeto = 0, tBruto = 0, tCant = 0, tGalones = 0;
+                data.items.forEach(i => {
+                    const n = i.cant * i.netoU, b = i.cant * i.brutoU;
+                    tCant += i.cant; tNeto += n; tBruto += b;
+                    
+                    let galonesLote = 0;
+                    if(esUSA && i.densidad > 0) {
+                        galonesLote = n / (i.densidad * 3.78541);
+                        tGalones += galonesLote;
+                    }
 
-                const obsTexto = doc.splitTextToSize(data.observaciones, 180);
-                const altoTexto = obsTexto.length * lineHeight;
-                const obsY = Math.max(currentY, margenInferior - altoTexto - 6);
+                    let nombreProducto = i.prod;
+                    if(lang === 'EN' && traduccionProductos[i.prod.toUpperCase()]) {
+                        nombreProducto = traduccionProductos[i.prod.toUpperCase()];
+                    }
+                    let r = [nombreProducto, i.lote];
+                    if(data.inclTambores) r.push(i.tamb);
+                    r.push(i.cant, (i.netoU||0).toFixed(2), n.toFixed(2), (i.brutoU||0).toFixed(2), b.toFixed(2));
+                    if(esUSA) r.push(galonesLote > 0 ? galonesLote.toFixed(2) : "-");
+                    pdfBody.push(r);
+                });
+
+                let colSpanLabel = 2;
+                let netMues = 0, bruMues = 0;
+                if(data.muestras) data.muestras.forEach(m => {
+                    const n = m.cant * m.netoU, b = m.cant * m.brutoU;
+                    netMues += n; bruMues += b;
+                    let r = [T.hMuestra, m.lote];
+                    if(data.inclTambores) r.push("");
+                    r.push(m.cant, (m.netoU||0).toFixed(2), n.toFixed(2), (m.brutoU||0).toFixed(2), b.toFixed(2));
+                    if(esUSA) r.push("-");
+                    pdfBody.push(r);
+                });
+
+                const pPeso = (data.pCant || 0) * (data.pPesoU || 0);
+                if(pPeso > 0) {
+                    let totalCols = 7 + (data.inclTambores ? 1 : 0) + (esUSA ? 1 : 0);
+                    let rowPallets = [
+                        { content: `${T.pallets} (${data.pCant} x ${data.pPesoU}kg)`, colSpan: totalCols - (esUSA ? 2 : 1), styles: { halign: 'right', fontStyle: 'italic' } }, 
+                        { content: pPeso.toFixed(2), styles: { halign: 'center', fontStyle: 'italic' } }
+                    ];
+                    if(esUSA) rowPallets.push({ content: "-", styles: { halign: 'center' } });
+                    pdfBody.push(rowPallets);
+                }
+
+                let headers = [T.hProd, T.hLote];
+                if(data.inclTambores) headers.push(T.hTamb);
+                headers.push(T.hCant, T.hNetoU, T.hNetoT, T.hBrutoU, T.hBrutoT);
+                if(esUSA) headers.push(T.hGalones);
+
+                const estilosColumnas = { 
+                    0: { cellWidth: 'auto' }, 
+                    1: { cellWidth: 16, halign: 'center' } 
+                };
+                let idx = 2;
+                if(data.inclTambores) { 
+                    estilosColumnas[2] = { cellWidth: 14, halign: 'center' }; 
+                    idx = 3; 
+                }
+                estilosColumnas[idx] = { cellWidth: 10, halign: 'center' };       
+                estilosColumnas[idx + 1] = { cellWidth: 18, halign: 'center' };   
+                estilosColumnas[idx + 2] = { cellWidth: 20, halign: 'center' };   
+                estilosColumnas[idx + 3] = { cellWidth: 18, halign: 'center' };   
+                estilosColumnas[idx + 4] = { cellWidth: 20, halign: 'center' };   
+                if(esUSA) estilosColumnas[idx + 5] = { cellWidth: 20, halign: 'center' };
+
+                let footRow = [
+                    { content: T.totalFinal, colSpan: colSpanLabel, styles: { halign: 'right' } }, 
+                    { content: tCant.toString(), styles: { halign: 'center' } }, 
+                    { content: "", styles: { halign: 'center' } },
+                    { content: (tNeto + netMues).toFixed(2), styles: { halign: 'center' } }, 
+                    { content: "", styles: { halign: 'center' } },
+                    { content: (tBruto + bruMues + pPeso).toFixed(2), styles: { halign: 'center' } }
+                ];
+                if(esUSA) footRow.push({ content: tGalones > 0 ? tGalones.toFixed(2) : "-", styles: { halign: 'center' } });
+
+                doc.autoTable({
+                    startY: 86, 
+                    head: [headers], 
+                    body: pdfBody,
+                    foot: [footRow],
+                    theme: 'striped', 
+                    headStyles: { 
+                        fillColor: [0, 51, 102], 
+                        fontSize: 7, 
+                        halign: 'center', 
+                        valign: 'middle', 
+                        minCellHeight: 10, 
+                        font: "helvetica",
+                        cellPadding: 2
+                    },
+                    bodyStyles: { fontSize: 7, font: "helvetica" },
+                    footStyles: { fillColor: [0, 51, 102], textColor: 255, fontStyle: 'bold', fontSize: 8 },
+                    columnStyles: estilosColumnas 
+                });
+
+                let currentY = doc.lastAutoTable.finalY + 8;
+
+                // LEYENDA MERCOSUR
+                if (esEuropaMercosur) {
+                    const leyendaTexto = "The exporter of the products covered by this document (CUIT number: 30-56116760-1) declares that, except where otherwise clearly indicated, these products are of MERCOSUR preferential origin.";
+                    
+                    doc.setFont("helvetica", "italic");
+                    doc.setFontSize(7.5);
+                    doc.setTextColor(30, 41, 59);
+
+                    const lineasLeyenda = doc.splitTextToSize(leyendaTexto, 182);
+                    doc.text(lineasLeyenda, 14, currentY);
+                    currentY += (lineasLeyenda.length * 3.5) + 4;
+                }
+
+                // DATOS DE UNIDAD DE TRANSPORTE
+                if (mostrarDatosTransporteInferior && (data.chofer || data.pCamion || data.empresa)) {
+                    let posTransporteY = 262;
+
+                    doc.setFont("helvetica", "bold");
+                    doc.setFontSize(8);
+                    doc.setTextColor(0, 51, 102);
+                    doc.text(T.transporteUnidad, 14, posTransporteY); 
+                    
+                    posTransporteY += 3;
+                    doc.setDrawColor(200, 200, 200);
+                    doc.setLineWidth(0.3);
+                    doc.line(14, posTransporteY, 196, posTransporteY); 
+                    
+                    posTransporteY += 5;
+                    doc.setFontSize(7.5);
+                    doc.setFont("helvetica", "normal");
+                    doc.setTextColor(0, 0, 0);
+
+                    const infoTransporte = [
+                        `${T.chofer}: ${data.chofer || '-'}`,
+                        `${T.dni}: ${data.dniChofer || '-'}`,
+                        `${T.patenteC}: ${data.pCamion || '-'}`,
+                        `${T.patenteS}: ${data.pSemi || '-'}`,
+                        `${T.empresa}: ${data.empresa || '-'}`
+                    ].join("   |   ");
+
+                    doc.text(infoTransporte, 14, posTransporteY);
+                }
+
+                if (data.observaciones && data.observaciones.trim() !== "") {
+                    const margenInferior = 255;
+                    const lineHeight = 4;
+
+                    doc.setFont("helvetica", "normal");
+                    doc.setFontSize(8);
+
+                    const obsTexto = doc.splitTextToSize(data.observaciones, 180);
+                    const altoTexto = obsTexto.length * lineHeight;
+                    const obsY = Math.max(currentY, margenInferior - altoTexto - 6);
+
+                    doc.setFont("helvetica", "bold");
+                    doc.setFontSize(9);
+                    doc.setTextColor(0, 51, 102);
+                    doc.text(lang === 'EN' ? "Observations:" : "Observaciones:", 14, obsY);
+
+                    doc.setFont("helvetica", "normal");
+                    doc.setFontSize(8);
+                    doc.setTextColor(0, 0, 0);
+                    doc.text(obsTexto, 14, obsY + 5);
+                }
+
+                if (imagenes && imagenes.bn) {
+                    doc.saveGraphicsState();
+                    doc.setGState(new doc.GState({ opacity: 0.20 })); 
+                    doc.addImage(imagenes.bn, 'JPEG', 45, doc.lastAutoTable.finalY + 10, 120, 0, undefined, 'FAST'); 
+                    doc.restoreGraphicsState();
+                }
+
+                const finalY = doc.lastAutoTable.finalY + 25; 
+                
+                if (imgFirma) {
+                    doc.addImage(imgFirma, 'JPEG', 150, finalY + 5, 18, 28, undefined, 'FAST'); 
+                }
+
+                doc.setDrawColor(0, 0, 0);
+                doc.setLineWidth(0.5);
+                doc.line(135, finalY + 35, 185, finalY + 35); 
 
                 doc.setFont("helvetica", "bold");
                 doc.setFontSize(9);
-                doc.setTextColor(0, 51, 102);
-                doc.text(lang === 'EN' ? "Observations:" : "Observaciones:", 14, obsY);
+                doc.text("ECA AGROINDUSTRIA", 142, finalY + 40); 
 
                 doc.setFont("helvetica", "normal");
                 doc.setFontSize(8);
-                doc.setTextColor(0, 0, 0);
-                doc.text(obsTexto, 14, obsY + 5);
-            }
+                const textoFirma = lang === 'EN' ? "Authorized Signature" : "Firma Autorizada";
+                doc.text(textoFirma, 146, finalY + 44);
 
-            if (imagenes && imagenes.bn) {
-                doc.saveGraphicsState();
-                doc.setGState(new doc.GState({ opacity: 0.20 })); 
-                doc.addImage(imagenes.bn, 'JPEG', 45, doc.lastAutoTable.finalY + 10, 120, 0, undefined, 'FAST'); 
-                doc.restoreGraphicsState();
-            }
-
-            const finalY = doc.lastAutoTable.finalY + 25; 
-            const cargarFirmaImg = (url) => {
-                return new Promise((resolve) => {
-                    const img = new Image();
-                    img.crossOrigin = "Anonymous";
-                    img.src = url;
-                    img.onload = () => resolve(img);
-                    img.onerror = () => resolve(null);
+                const hoy = new Date();
+                const locale = lang === 'EN' ? 'en-US' : 'es-AR';
+                const fechaFormateada = hoy.toLocaleDateString(locale, {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
                 });
+
+                const textoFecha = `Concordia, ${fechaFormateada}`;
+                doc.setFontSize(7.5);
+                doc.text(textoFecha, 143, finalY + 48);
             };
 
-            const firmaURL = "https://lh3.googleusercontent.com/d/1m-O260uMHL7YN1A-sqB1ooiztmaU6Gb4";
-            const imgFirma = await cargarFirmaImg(firmaURL);
-            
-            if (imgFirma) {
-                doc.addImage(imgFirma, 'JPEG', 150, finalY + 5, 18, 28, undefined, 'FAST'); 
-            }
+            // GENERAR PÁGINA 1
+            renderizarContenidoPagina();
 
-            doc.setDrawColor(0, 0, 0);
-            doc.setLineWidth(0.5);
-            doc.line(135, finalY + 35, 185, finalY + 35); 
+            // GENERAR PÁGINA 2
+            doc.addPage();
+            renderizarContenidoPagina();
 
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(9);
-            doc.text("ECA AGROINDUSTRIA", 142, finalY + 40); 
-
-            doc.setFont("helvetica", "normal");
-            doc.setFontSize(8);
-            const textoFirma = lang === 'EN' ? "Authorized Signature" : "Firma Autorizada";
-            doc.text(textoFirma, 146, finalY + 44);
-
-            const hoy = new Date();
-            const locale = lang === 'EN' ? 'en-US' : 'es-AR';
-            const fechaFormateada = hoy.toLocaleDateString(locale, {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric'
-            });
-
-            const textoFecha = `Concordia, ${fechaFormateada}`;
-            doc.setFontSize(7.5);
-            doc.text(textoFecha, 143, finalY + 48);
-
+            // APLICAR PIE DE PÁGINA Y ETIQUETAS DE COPIA A AMBAS PÁGINAS
             const totalPaginas = doc.internal.getNumberOfPages();
             for (let i = 1; i <= totalPaginas; i++) {
                 doc.setPage(i);
@@ -1013,7 +1028,15 @@
                 doc.text(linea2, 14, 288);
 
                 const pieDerecha = lang === 'EN' ? `Page ${i} of ${totalPaginas}` : `Página ${i} de ${totalPaginas}`;
-                doc.text(pieDerecha, 196, 288, { align: 'right' });
+                doc.text(pieDerecha, 196, 284, { align: 'right' });
+
+                // Leyenda indicativa del tipo de copia debajo de la numeración de página
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(6.5);
+                doc.setTextColor(0, 51, 102);
+
+                const tipoCopia = (i === 1) ? T.copiaCarga : T.copiaPorteria;
+                doc.text(tipoCopia, 196, 288, { align: 'right' });
             }
 
             const nombreArchivo = `PL_${data.ref}_${data.contenedor || 'SIN_CONT'}_${lang}.pdf`;
