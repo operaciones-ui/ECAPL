@@ -11,7 +11,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, query, orderBy, deleteDoc, doc, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy, deleteDoc, doc, updateDoc, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCqI1jDuW6pFdPx56r5Bznz5Dgau6_1v2A",
@@ -25,7 +25,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        window.fb = { db, col: collection, add: addDoc, get: getDocs, qry: query, ord: orderBy, del: deleteDoc, docRef: doc, wh: where };
+        window.fb = { db, col: collection, add: addDoc, get: getDocs, qry: query, ord: orderBy, del: deleteDoc, upd: updateDoc, docRef: doc, wh: where };
         setTimeout(() => { 
             cargarListasDesplegables();
             renderizarHistorial(); 
@@ -292,11 +292,49 @@
                             <th>Camión</th>
                             <th>Semi</th>
                             <th>Empresa</th>
-                            <th class="text-center">Acción</th>
+                            <th class="text-center">Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="tablaChoferes"></tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL EDITAR CHOFER -->
+    <div id="modalEditarChofer" class="hidden fixed inset-0 bg-slate-900 bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 space-y-4">
+            <h3 class="text-xl font-bold text-blue-900 border-b pb-2">✏️ Editar Chofer</h3>
+            <input type="hidden" id="editChoferId">
+            <div class="space-y-3">
+                <div>
+                    <label class="text-xs font-bold text-slate-500 uppercase block mb-1">Nombre y Apellido</label>
+                    <input type="text" id="editChoferNombre" class="w-full border p-2 rounded-lg">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-xs font-bold text-slate-500 uppercase block mb-1">DNI</label>
+                        <input type="text" id="editChoferDni" class="w-full border p-2 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-slate-500 uppercase block mb-1">Empresa Transporte</label>
+                        <input type="text" id="editChoferEmpresa" class="w-full border p-2 rounded-lg">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-xs font-bold text-slate-500 uppercase block mb-1">Patente Camión</label>
+                        <input type="text" id="editChoferCamion" class="w-full border p-2 rounded-lg uppercase">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-slate-500 uppercase block mb-1">Patente Semi</label>
+                        <input type="text" id="editChoferSemi" class="w-full border p-2 rounded-lg uppercase">
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-end gap-3 pt-4 border-t">
+                <button type="button" onclick="cerrarModalEditarChofer()" class="px-4 py-2 bg-slate-300 text-slate-700 font-bold rounded-lg hover:bg-slate-400 transition">Cancelar</button>
+                <button type="button" onclick="actualizarChoferCloud()" class="px-5 py-2 bg-blue-900 text-white font-bold rounded-lg hover:bg-blue-800 transition shadow">💾 Actualizar</button>
             </div>
         </div>
     </div>
@@ -424,16 +462,62 @@
                     <td class="font-mono">${c.camion || '-'}</td>
                     <td class="font-mono">${c.semi || '-'}</td>
                     <td>${c.empresa || '-'}</td>
-                    <td class="text-center">
-                        ${c.idDoc ? `<button onclick="eliminarChoferCloud('${c.idDoc}')" class="text-red-500 font-bold hover:underline">✕ Eliminar</button>` : '<span class="text-slate-400 font-italic">Predeterminado</span>'}
+                    <td class="text-center space-x-2">
+                        ${c.idDoc ? `
+                            <button onclick="abrirModalEditarChofer('${c.idDoc}')" class="px-2 py-1 bg-amber-100 text-amber-800 rounded font-bold hover:bg-amber-200">✏️ Editar</button>
+                            <button onclick="eliminarChoferCloud('${c.idDoc}', '${c.nombre}')" class="px-2 py-1 bg-red-100 text-red-700 rounded font-bold hover:bg-red-200">🗑️ Eliminar</button>
+                        ` : '<span class="text-slate-400 font-italic">Predeterminado</span>'}
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        async function eliminarChoferCloud(idDoc) {
-            if(confirm("¿Seguro que desea eliminar este chofer de la base de datos?")) {
+        function abrirModalEditarChofer(idDoc) {
+            const chofer = listaChoferesGlobal.find(c => c.idDoc === idDoc);
+            if(!chofer) return;
+
+            document.getElementById('editChoferId').value = idDoc;
+            document.getElementById('editChoferNombre').value = chofer.nombre || '';
+            document.getElementById('editChoferDni').value = chofer.dni || '';
+            document.getElementById('editChoferCamion').value = chofer.camion || '';
+            document.getElementById('editChoferSemi').value = chofer.semi || '';
+            document.getElementById('editChoferEmpresa').value = chofer.empresa || '';
+
+            document.getElementById('modalEditarChofer').classList.remove('hidden');
+        }
+
+        function cerrarModalEditarChofer() {
+            document.getElementById('modalEditarChofer').classList.add('hidden');
+        }
+
+        async function actualizarChoferCloud() {
+            const idDoc = document.getElementById('editChoferId').value;
+            const nombre = document.getElementById('editChoferNombre').value.trim().toUpperCase();
+            const dni = document.getElementById('editChoferDni').value.trim();
+            const camion = document.getElementById('editChoferCamion').value.trim().toUpperCase();
+            const semi = document.getElementById('editChoferSemi').value.trim().toUpperCase();
+            const empresa = document.getElementById('editChoferEmpresa').value.trim().toUpperCase();
+
+            if(!nombre) {
+                alert("El nombre del chofer no puede estar vacío.");
+                return;
+            }
+
+            try {
+                await window.fb.upd(window.fb.docRef(window.fb.db, "choferes", idDoc), {
+                    nombre, dni, camion, semi, empresa
+                });
+                alert("Chofer actualizado con éxito.");
+                cerrarModalEditarChofer();
+                await cargarChoferesCloud();
+            } catch(e) {
+                alert("Error al actualizar el chofer: " + e.message);
+            }
+        }
+
+        async function eliminarChoferCloud(idDoc, nombre) {
+            if(confirm(`¿Está seguro de que realmente desea eliminar al chofer "${nombre}" de la base de datos?`)) {
                 try {
                     await window.fb.del(window.fb.docRef(window.fb.db, "choferes", idDoc));
                     await cargarChoferesCloud();
