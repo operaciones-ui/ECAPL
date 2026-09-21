@@ -268,7 +268,6 @@
             paises: ["ESTADOS UNIDOS", "NUEVA ZELANDA","ESPAÑA", "MÉXICO", "GUATEMALA", "TRINIDAD Y TOBAGO", "BRASIL", "CHILE", "ALEMANIA", "PAISES BAJOS", "JAPON", "COLOMBIA", "FRANCIA", "PANAMA"],
             puertosCarga: ["BUENOS AIRES", "ROSARIO", "MONTEVIDEO", "VALPARAISO", "EZEIZA"],
             puertosDescarga: ["MIAMI", "NAPIER", "TAURANGA", "VALENCIA", "NEW YORK", "PUERTO ESPAÑA", "SANTOS", "HAMBURGO", "PHILADELPHIA", "TOKYO", "YOKOHAMA", "ROTTERDAM", "OSAKA", "KOBE", "RODMAN", "SANTO TOMAS DE CASTILLA", "FOS", "CARTAGENA", "NARITA", "NIZA"],
-            // LISTADO DE CHOFERES FRECUENTES
             choferes: [
                 { nombre: "JUAN PÉREZ", dni: "28.456.789", camion: "AF123JK", semi: "AA987ZZ", empresa: "LOGÍSTICA DEL LITORAL" },
                 { nombre: "CARLOS GÓMEZ", dni: "31.987.654", camion: "AD456PO", semi: "AB321XX", empresa: "TRANSPORTE MESOPOTAMIA" },
@@ -292,7 +291,6 @@
             llenarSelect('pol', DATA_LISTAS.puertosCarga);
             llenarSelect('pod', DATA_LISTAS.puertosDescarga);
 
-            // Cargar selector de choferes
             const selChofer = document.getElementById('selectChofer');
             if(selChofer) {
                 selChofer.innerHTML = '<option value="">-- Autocompletar con Chofer Guardado --</option>';
@@ -659,7 +657,7 @@
             const T = i18n[lang];
             const esUSA = data.pais === 'ESTADOS UNIDOS';
             const esEuropaMercosur = (data.pais === 'ALEMANIA' || data.pais === 'PAISES BAJOS');
-            const mostrarDatosTransporteInferior = (data.pais !== 'CHILE');
+            const mostrarDatosTransporteInferior = (data.via === 'MARITIMO' || data.via === 'AEREO');
 
             const cargarImagenBN = (url) => {
                 return new Promise((resolve) => {
@@ -899,7 +897,7 @@
                 currentY += (lineasLeyenda.length * 3.5) + 4;
             }
 
-            // DATOS DE UNIDAD DE TRANSPORTE (PARA TODOS LOS DESTINOS EXCEPTO CHILE)
+            // DATOS DE UNIDAD DE TRANSPORTE (SOLO PARA VÍAS MARÍTIMA Y AÉREA)
             if (mostrarDatosTransporteInferior && (data.chofer || data.pCamion || data.empresa)) {
                 doc.setFont("helvetica", "bold");
                 doc.setFontSize(8);
