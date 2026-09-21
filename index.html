@@ -94,7 +94,7 @@
                     </div>
                 </div>
 
-                <div id="transporteContainer" class="bg-slate-50 p-6 rounded-xl border border-slate-200 shadow-inner">
+                <div id="transporteContainer" class="bg-slate-50 p-6 rounded-xl border border-slate-200 shadow-inner space-y-6">
                     <div id="camposMaritimo" class="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <div><label class="text-xs font-bold text-slate-500 uppercase">N° Contenedor</label><input type="text" id="contenedor" class="w-full border p-2.5 rounded-lg"></div>
                         <div><label class="text-xs font-bold text-slate-500 uppercase">Buque / Viaje</label><input type="text" id="buque" class="w-full border p-2.5 rounded-lg"></div>
@@ -106,7 +106,7 @@
                         <div><label class="text-xs font-bold text-slate-500 uppercase">N° de Vuelo</label><input type="text" id="vuelo" class="w-full border p-2.5 rounded-lg"></div>
                         <div><label class="text-xs font-bold text-blue-800 uppercase">Guía Aérea (AWB)</label><input type="text" id="awb" class="w-full border-2 border-blue-200 p-2.5 rounded-lg font-bold"></div>
                     </div>
-                    <div id="camposTerrestre" class="hidden space-y-4">
+                    <div id="camposTerrestre" class="space-y-4 pt-4 border-t border-slate-200">
                         <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
                             <label class="text-xs font-bold text-blue-900 uppercase block mb-1">📋 Seleccionar Chofer Frecuente</label>
                             <select id="selectChofer" class="w-full border p-2 rounded-lg font-bold bg-white text-slate-700" onchange="autocompletarChofer(this.value)">
@@ -417,10 +417,9 @@
             else if(via === 'AEREO') { lPol.innerText = "Aeropuerto de Origen"; lPod.innerText = "Aeropuerto de Destino"; }
             document.getElementById('camposMaritimo').classList.add('hidden');
             document.getElementById('camposAereo').classList.add('hidden');
-            document.getElementById('camposTerrestre').classList.add('hidden');
             if(via === 'MARITIMO') document.getElementById('camposMaritimo').classList.remove('hidden');
             if(via === 'AEREO') document.getElementById('camposAereo').classList.remove('hidden');
-            if(via === 'TERRESTRE') document.getElementById('camposTerrestre').classList.remove('hidden');
+            document.getElementById('camposTerrestre').classList.remove('hidden');
         }
 
         function togglePallets() { document.getElementById('camposPallets').classList.toggle('hidden', document.getElementById('conPallets').value === 'NO'); }
