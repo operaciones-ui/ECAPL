@@ -989,12 +989,12 @@
 
                 doc.setFont("helvetica", "bold");
                 doc.setFontSize(9);
-                doc.text("ECA AGROINDUSTRIA", 142, finalY + 40); 
+                doc.text("ECA AGROINDUSTRIA", 142, finalY + 44); 
 
                 doc.setFont("helvetica", "normal");
                 doc.setFontSize(8);
                 const textoFirma = lang === 'EN' ? "Authorized Signature" : "Firma Autorizada";
-                doc.text(textoFirma, 146, finalY + 44);
+                doc.text(textoFirma, 146, finalY + 48);
 
                 const hoy = new Date();
                 const locale = lang === 'EN' ? 'en-US' : 'es-AR';
@@ -1006,7 +1006,7 @@
 
                 const textoFecha = `Concordia, ${fechaFormateada}`;
                 doc.setFontSize(7.5);
-                doc.text(textoFecha, 143, finalY + 48);
+                doc.text(textoFecha, 143, finalY + 52);
             };
 
             // GENERAR PÁGINA 1
